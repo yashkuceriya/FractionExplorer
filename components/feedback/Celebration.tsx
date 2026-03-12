@@ -55,7 +55,8 @@ export default function Celebration({ show, onComplete }: CelebrationProps) {
 
   useEffect(() => {
     if (show) {
-      const newPieces = Array.from({ length: 50 }, (_, i) => ({
+      const count = typeof window !== "undefined" && "ontouchstart" in window ? 25 : 50;
+      const newPieces = Array.from({ length: count }, (_, i) => ({
         id: i,
         delay: Math.random() * 0.5,
         color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],

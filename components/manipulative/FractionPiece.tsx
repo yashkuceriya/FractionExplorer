@@ -116,7 +116,7 @@ export default function FractionPiece({
               e.stopPropagation();
               onSmash();
             }}
-            className="min-w-[36px] h-8 px-2 bg-gradient-to-br from-red-400 to-red-600 text-white text-[10px] font-bold rounded-full shadow-md flex items-center justify-center gap-0.5 active:scale-90 transition-transform border border-red-300/50"
+            className="min-w-[44px] h-[44px] px-2 bg-gradient-to-br from-red-400 to-red-600 text-white text-[11px] font-bold rounded-full shadow-md flex items-center justify-center gap-0.5 active:scale-90 transition-transform border border-red-300/50"
           >
             💥 Split
           </button>
@@ -133,7 +133,7 @@ export default function FractionPiece({
               e.stopPropagation();
               onMerge();
             }}
-            className="min-w-[36px] h-8 px-2 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white text-[10px] font-bold rounded-full shadow-md flex items-center justify-center gap-0.5 active:scale-90 transition-transform border border-emerald-300/50"
+            className="min-w-[44px] h-[44px] px-2 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white text-[11px] font-bold rounded-full shadow-md flex items-center justify-center gap-0.5 active:scale-90 transition-transform border border-emerald-300/50"
           >
             + Merge
           </button>

@@ -270,7 +270,7 @@ export default function FractionWorkspace({
     activationConstraint: { distance: 8 },
   });
   const touchSensor = useSensor(TouchSensor, {
-    activationConstraint: { delay: 150, tolerance: 5 },
+    activationConstraint: { delay: 150, tolerance: 10 },
   });
   const sensors = useSensors(mouseSensor, touchSensor);
 

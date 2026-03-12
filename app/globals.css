@@ -38,6 +38,11 @@ button, a, input, [data-no-drag] {
   user-select: text;
 }
 
+/* Momentum scrolling for iPad Safari */
+.overflow-y-auto, .overflow-x-auto, .chat-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Custom scrollbar for chat */
 .chat-scroll::-webkit-scrollbar {
   width: 4px;
@@ -48,6 +53,21 @@ button, a, input, [data-no-drag] {
 .chat-scroll::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 2px;
+}
+
+/* Safe area insets for overlays on iPad with notch/home indicator */
+.safe-area-overlay {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* GPU acceleration for animated elements */
+[data-framer-motion], .pop-in, .bounce-in {
+  will-change: transform, opacity;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* Hide scrollbar for tab bars */
