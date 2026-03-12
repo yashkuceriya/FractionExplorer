@@ -1,0 +1,149 @@
+@import "tailwindcss";
+
+@theme {
+  --color-tutor: #e97818;
+  --color-tutor-light: #fdba74;
+  --color-tutor-dark: #c2410c;
+  --color-student: #10b981;
+  --color-student-light: #6ee7b7;
+  --color-celebrate: #f59e0b;
+  --color-fraction-1: #ef4444;
+  --color-fraction-2: #3b82f6;
+  --color-fraction-3: #8b5cf6;
+  --color-fraction-4: #f97316;
+  --color-fraction-5: #14b8a6;
+  --color-surface: #fff9f0;
+  --color-surface-raised: #ffffff;
+  --color-adventure: #7c3aed;
+  --color-adventure-light: #c4b5fd;
+  --color-jungle: #15803d;
+  --color-jungle-light: #86efac;
+}
+
+html, body {
+  overscroll-behavior: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Allow text selection in chat input */
+.chat-input {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Custom scrollbar for chat */
+.chat-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+/* Hide scrollbar for tab bars */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Fraction bar animation */
+@keyframes split-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+.split-pulse {
+  animation: split-pulse 0.3s ease-in-out;
+}
+
+/* Confetti */
+@keyframes confetti-fall {
+  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.bounce-in {
+  animation: bounce-in 0.5s ease-out;
+}
+
+/* Marching-ants border for comparison zone hover */
+@keyframes border-march {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -16; }
+}
+.animate-border-march {
+  animation: border-march 0.4s linear infinite;
+}
+
+/* Rainbow shimmer for success states */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Voice speaking sound bars */
+@keyframes soundbar {
+  0% { height: 20%; }
+  100% { height: 100%; }
+}
+
+/* Fraction Rain — falling area needs container queries for 100cqh */
+.rain-fall-area {
+  container-type: size;
+}
+
+/* Glow pulse for neon elements */
+@keyframes glow-pulse {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 4px currentColor); }
+  50% { filter: brightness(1.2) drop-shadow(0 0 8px currentColor); }
+}
+
+/* Fun wiggle animation */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+.animate-wiggle {
+  animation: wiggle 0.4s ease-in-out;
+}
+
+/* Pop-in for new blocks */
+@keyframes pop-in {
+  0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.pop-in {
+  animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Landscape orientation helpers ── */
+@media (orientation: landscape) and (max-height: 820px) {
+  .landscape-compact { padding-top: 2px !important; padding-bottom: 2px !important; }
+  .landscape-hide { display: none !important; }
+  .landscape-smaller { font-size: 0.65rem !important; }
+  .landscape-thin { padding-top: 0px !important; padding-bottom: 0px !important; }
+  .landscape-shorter { min-height: 100px !important; }
+}
+
+/* Extra tight landscape (phone landscape) */
+@media (orientation: landscape) and (max-height: 500px) {
+  .landscape-compact { padding-top: 0px !important; padding-bottom: 0px !important; }
+  .landscape-shorter { min-height: 80px !important; }
+}
+
+/* iPad-specific: side-by-side layout optimizations */
+@media (min-width: 768px) {
+  .ipad-workspace-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
