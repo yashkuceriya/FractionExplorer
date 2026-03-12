@@ -587,13 +587,19 @@ export default function LessonPage() {
     const newMuted = !soundMuted;
     setSoundMuted(newMuted);
     setMuted(newMuted);
-  }, [soundMuted]);
-
-  const handleMusicToggle = useCallback(() => {
-    const newMuted = !bgMusicMuted;
+    // Also mute music
     setBgMusicMuted(newMuted);
     setMusicMuted(newMuted);
-  }, [bgMusicMuted]);
+    // Also mute voice
+    if (newMuted) {
+      setVoiceEnabled(false);
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    } else {
+      setVoiceEnabled(true);
+    }
+  }, [soundMuted]);
 
   const handleRestart = useCallback(() => {
     setLessonState(INITIAL_LESSON_STATE);
@@ -743,7 +749,7 @@ export default function LessonPage() {
       {/* Main content — responsive split layout (side-by-side on iPad+) */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
         {/* Chat panel — 30% width on tablet+, or stacked in portrait phone */}
-        <div className="min-h-0 md:w-[30%] md:min-w-[260px] md:max-w-[340px] md:border-r border-gray-100 flex flex-col max-h-[40vh] md:max-h-none">
+        <div className="min-h-0 md:w-[30%] md:min-w-[260px] md:max-w-[340px] md:border-r border-amber-100/60 flex flex-col max-h-[35vh] md:max-h-none">
           <ChatPanel
             messages={visibleMessages}
             isLoading={isLoading}

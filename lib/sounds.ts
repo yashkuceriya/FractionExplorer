@@ -8,6 +8,10 @@ function getAudioContext(): AudioContext {
   if (!audioContext) {
     audioContext = new AudioContext();
   }
+  // iOS Safari starts AudioContext suspended — resume on user gesture
+  if (audioContext.state === "suspended") {
+    audioContext.resume();
+  }
   return audioContext;
 }
 

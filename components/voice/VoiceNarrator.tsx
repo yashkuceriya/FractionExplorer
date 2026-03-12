@@ -197,14 +197,17 @@ export default function VoiceNarrator({
 
       let chunkIndex = 0;
 
+      // iOS Safari bug: speechSynthesis pauses after ~15s. Workaround: resume periodically.
+      let keepAlive: ReturnType<typeof setInterval> | null = null;
+
       function speakNext() {
         if (cancelledRef.current || chunkIndex >= chunks.length) {
           updateSpeaking(false);
+          if (keepAlive) clearInterval(keepAlive);
           return;
         }
 
         const utterance = new SpeechSynthesisUtterance(chunks[chunkIndex]);
-        // Slightly slower rate for clearer speech
         utterance.rate = character?.rate ?? 0.8;
         utterance.pitch = character?.pitch ?? 1.1;
         utterance.volume = 0.9;
@@ -215,20 +218,32 @@ export default function VoiceNarrator({
           chunkIndex++;
           if (cancelledRef.current) {
             updateSpeaking(false);
+            if (keepAlive) clearInterval(keepAlive);
             return;
           }
           if (chunkIndex < chunks.length) {
-            // Pause between sentences for natural feel
             setTimeout(speakNext, 200);
           } else {
             updateSpeaking(false);
+            if (keepAlive) clearInterval(keepAlive);
           }
         };
         utterance.onerror = () => {
           updateSpeaking(false);
+          if (keepAlive) clearInterval(keepAlive);
         };
 
         window.speechSynthesis.speak(utterance);
+
+        // Start keepalive on first chunk
+        if (!keepAlive) {
+          keepAlive = setInterval(() => {
+            if (window.speechSynthesis.speaking) {
+              window.speechSynthesis.pause();
+              window.speechSynthesis.resume();
+            }
+          }, 5000);
+        }
       }
 
       speakNext();
@@ -242,16 +257,37 @@ export default function VoiceNarrator({
     }
   }, [text, enabled, speak]);
 
-  // Load voices
+  // Load voices + iOS Safari warm-up
   useEffect(() => {
-    if (typeof window !== "undefined" && window.speechSynthesis) {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    // Load voices
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => {
+      voicesLoaded.current = true;
+      cachedVoice.current = null;
       window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => {
-        voicesLoaded.current = true;
-        cachedVoice.current = null;
-        window.speechSynthesis.getVoices();
-      };
+    };
+
+    // iOS Safari requires a user-gesture-triggered utterance to unlock TTS.
+    // We attach a one-shot handler that speaks an empty utterance on first touch/click.
+    let unlocked = false;
+    function unlockTTS() {
+      if (unlocked) return;
+      unlocked = true;
+      const warmup = new SpeechSynthesisUtterance("");
+      warmup.volume = 0;
+      window.speechSynthesis.speak(warmup);
+      document.removeEventListener("touchstart", unlockTTS);
+      document.removeEventListener("click", unlockTTS);
     }
+    document.addEventListener("touchstart", unlockTTS, { once: true });
+    document.addEventListener("click", unlockTTS, { once: true });
+
+    return () => {
+      document.removeEventListener("touchstart", unlockTTS);
+      document.removeEventListener("click", unlockTTS);
+    };
   }, []);
 
   // Invalidate cached voice when character changes

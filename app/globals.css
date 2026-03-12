@@ -25,6 +25,10 @@ html, body {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* Only set touch-action on non-draggable areas — @dnd-kit needs raw touch on draggables */
+button, a, input, [data-no-drag] {
   touch-action: manipulation;
 }
 
@@ -126,22 +130,23 @@ html, body {
   animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ── Landscape orientation helpers ── */
-@media (orientation: landscape) and (max-height: 820px) {
-  .landscape-compact { padding-top: 2px !important; padding-bottom: 2px !important; }
+/* ── Landscape helpers — only for phone landscape, NOT iPad ── */
+@media (orientation: landscape) and (max-height: 500px) {
+  .landscape-compact { padding-top: 1px !important; padding-bottom: 1px !important; }
   .landscape-hide { display: none !important; }
   .landscape-smaller { font-size: 0.65rem !important; }
   .landscape-thin { padding-top: 0px !important; padding-bottom: 0px !important; }
-  .landscape-shorter { min-height: 100px !important; }
-}
-
-/* Extra tight landscape (phone landscape) */
-@media (orientation: landscape) and (max-height: 500px) {
-  .landscape-compact { padding-top: 0px !important; padding-bottom: 0px !important; }
   .landscape-shorter { min-height: 80px !important; }
 }
 
-/* iPad-specific: side-by-side layout optimizations */
+/* iPad landscape — compact but still show everything */
+@media (orientation: landscape) and (min-width: 768px) and (max-height: 900px) {
+  .landscape-compact { padding-top: 2px !important; padding-bottom: 2px !important; }
+  .landscape-thin { padding-top: 1px !important; padding-bottom: 1px !important; }
+  .landscape-shorter { min-height: 110px !important; }
+}
+
+/* iPad-specific: 5 columns for fraction grid */
 @media (min-width: 768px) {
   .ipad-workspace-grid {
     grid-template-columns: repeat(5, 1fr);
