@@ -426,7 +426,7 @@ export default function LessonPage() {
       } else if (selectedEpisode) {
         if (selectedEpisode.id <= 2) {
           // Early episodes: teach the concept FIRST before any tasks
-          content = `[Student started Episode ${selectedEpisode.id}: "${selectedEpisode.title}". This kid may have NEVER seen a fraction before. Start by explaining what a fraction is using a simple sharing story (splitting a cookie, sharing pizza). Use 1-2 short sentences. Do NOT give them a task yet — just teach the concept warmly and ask if they're ready to try!]`;
+          content = `[Student started Episode ${selectedEpisode.id}: "${selectedEpisode.title}". This kid has NEVER heard of fractions. Do NOT say "1/2" or any fraction yet! Start with Step 1: what is a WHOLE? Use a cookie or pizza — "See this? It's one WHOLE cookie. The whole thing!" Then ask what happens if two friends want to share. Build up slowly from whole → sharing → pieces → naming pieces. Keep it to 1-2 sentences. Wait for their response before teaching more.]`;
         } else {
           content = `[Student started Episode ${selectedEpisode.id}: "${selectedEpisode.title}". Skills: ${selectedEpisode.skills.join(", ")}. Begin with the warmup!]`;
         }
@@ -884,9 +884,10 @@ export default function LessonPage() {
                   isLoading={isLoading}
                   onSend={handleSend}
                   quickReplies={[
-                    "I'm ready! Let's go!",
-                    "What's a fraction?",
+                    "What's a whole?",
+                    "I want to share!",
                     "Tell me more!",
+                    "I'm ready!",
                   ]}
                   isSpeaking={isSpeaking}
                   characterId={voiceCharacter.id}
@@ -955,7 +956,7 @@ export default function LessonPage() {
           {/* Main content — responsive split layout (side-by-side on iPad landscape, stacked otherwise) */}
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
             {/* Chat panel — side panel on large screens, compact strip on phone/iPad portrait */}
-            <div className="min-h-0 lg:w-[30%] lg:min-w-[260px] lg:max-w-[340px] lg:border-r border-amber-100/60 flex flex-col max-h-[30vh] lg:max-h-none">
+            <div className="min-h-0 md:w-[30%] md:min-w-[260px] md:max-w-[340px] md:border-r border-amber-100/60 flex flex-col max-h-[30vh] md:max-h-none">
               <ChatPanel
                 messages={visibleMessages}
                 isLoading={isLoading}
