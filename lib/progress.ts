@@ -1,4 +1,6 @@
-const STORAGE_KEY = "player-progress";
+import { scopedKey } from "./active-student-id";
+
+const BASE_KEY = "player-progress";
 
 export interface PlayerProgress {
   xp: number;
@@ -16,7 +18,8 @@ export interface PlayerProgress {
 }
 
 // Level thresholds: index = level, value = XP needed
-const LEVEL_THRESHOLDS = [0, 10, 25, 50, 80, 120];
+// Kept low so kids unlock new modes quickly and don't feel stuck
+const LEVEL_THRESHOLDS = [0, 5, 15, 30, 50, 80];
 
 export const LEVEL_NAMES = [
   "Beginner",
@@ -55,7 +58,10 @@ function levelFromXP(xp: number): number {
 }
 
 export function xpForNextLevel(level: number): number {
-  if (level >= LEVEL_THRESHOLDS.length - 1) return LEVEL_THRESHOLDS[level];
+  if (level >= LEVEL_THRESHOLDS.length - 1) {
+    // At max level, set next threshold above current to avoid 0/0 division
+    return LEVEL_THRESHOLDS[level] + 50;
+  }
   return LEVEL_THRESHOLDS[level + 1];
 }
 
@@ -82,7 +88,7 @@ function defaultProgress(): PlayerProgress {
 
 export function loadProgress(): PlayerProgress {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(scopedKey(BASE_KEY));
     if (!raw) return defaultProgress();
     const p: PlayerProgress = JSON.parse(raw);
 
@@ -107,7 +113,7 @@ export function loadProgress(): PlayerProgress {
 
 export function saveProgress(p: PlayerProgress) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+    localStorage.setItem(scopedKey(BASE_KEY), JSON.stringify(p));
   } catch {
     // ignore
   }

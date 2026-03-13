@@ -116,27 +116,43 @@ let counter = 0;
 
 // ── Generator ──
 
-export function generateChallenge(playerLevel: number = 0): Challenge {
-  // Weight types by level
+type Difficulty = "beginner" | "intermediate" | "expert";
+
+const DIFFICULTY_MAX_DENOM: Record<Difficulty, number> = {
+  beginner: 4,
+  intermediate: 8,
+  expert: 12,
+};
+
+function familiesForDifficulty(difficulty: Difficulty): Frac[][] {
+  const maxD = DIFFICULTY_MAX_DENOM[difficulty];
+  return EQUIVALENCE_FAMILIES
+    .map((family) => family.filter((f) => f.d <= maxD))
+    .filter((family) => family.length >= 2);
+}
+
+export function generateChallenge(playerLevel: number = 0, difficulty: Difficulty = "beginner"): Challenge {
+  // Weight types by level + difficulty
   const types: ChallengeType[] = ["find-equivalent", "find-equivalent"];
 
   if (playerLevel >= 0) types.push("compare-bigger", "share-puzzle");
   if (playerLevel >= 1) types.push("find-equivalent", "share-puzzle");
-  if (playerLevel >= 2) types.push("missing-number", "compare-bigger");
-  if (playerLevel >= 3) types.push("missing-number", "missing-number");
+  if (difficulty !== "beginner" || playerLevel >= 2) types.push("missing-number", "compare-bigger");
+  if (difficulty === "expert" || playerLevel >= 3) types.push("missing-number", "missing-number");
 
   const type = pickRandom(types);
   counter++;
 
+  const maxDenom = DIFFICULTY_MAX_DENOM[difficulty];
+  const xpMultiplier = difficulty === "expert" ? 2 : difficulty === "intermediate" ? 1.5 : 1;
+
   switch (type) {
     case "find-equivalent": {
-      // Pick families appropriate for level
-      const minSize = playerLevel >= 2 ? 2 : 2;
-      const families = EQUIVALENCE_FAMILIES.filter((f) => f.length >= minSize);
+      const families = familiesForDifficulty(difficulty);
       const family = pickRandom(families);
       const shuffled = shuffle(family);
       const target = shuffled[0];
-      const answer = shuffled[1];
+      const answer = shuffled[1] ?? shuffled[0]; // guard: family always ≥2, but be safe
 
       return {
         id: `ch-${counter}`,
@@ -145,19 +161,23 @@ export function generateChallenge(playerLevel: number = 0): Challenge {
         emoji: "\u{1F50D}",
         targetFraction: target,
         answer,
-        xpReward: 3,
+        xpReward: Math.round(3 * xpMultiplier),
         hint: `Think about what ${target.n}/${target.d} looks like with different sized pieces...`,
       };
     }
 
     case "compare-bigger": {
-      const allFracs = EQUIVALENCE_FAMILIES.flat();
+      const allFracs = familiesForDifficulty(difficulty).flat();
       const a = pickRandom(allFracs);
       let b = pickRandom(allFracs);
       let attempts = 0;
       while (a.n * b.d === b.n * a.d && attempts < 20) {
         b = pickRandom(allFracs);
         attempts++;
+      }
+      // If still equal after retries, force a different fraction
+      if (a.n * b.d === b.n * a.d) {
+        b = a.d <= 4 ? { n: 1, d: a.d + 1 } : { n: 1, d: a.d - 1 };
       }
       const bigger = a.n / a.d > b.n / b.d ? a : b;
       const emoji = pickRandom(COMPARE_EMOJIS);
@@ -169,31 +189,30 @@ export function generateChallenge(playerLevel: number = 0): Challenge {
         emoji,
         targetFraction: a,
         answer: bigger,
-        xpReward: 2,
+        xpReward: Math.round(2 * xpMultiplier),
         hint: `Compare the sizes — which bar is longer?`,
       };
     }
 
     case "share-puzzle": {
-      const s = pickRandom(SHARE_SCENARIOS);
+      const validScenarios = SHARE_SCENARIOS.filter((sc) => sc.people <= maxDenom);
+      const s = pickRandom(validScenarios.length > 0 ? validScenarios : SHARE_SCENARIOS.slice(0, 3));
       return {
         id: `ch-${counter}`,
         type: "share-puzzle",
         prompt: `Share 1 ${s.thing} equally among ${s.people} friends!`,
         emoji: s.emoji,
         answer: { n: 1, d: s.people },
-        xpReward: 3,
+        xpReward: Math.round(3 * xpMultiplier),
         hint: `If you split something into ${s.people} equal parts...`,
       };
     }
 
     case "missing-number": {
-      const family = pickRandom(
-        EQUIVALENCE_FAMILIES.filter((f) => f.length >= 2)
-      );
+      const family = pickRandom(familiesForDifficulty(difficulty));
       const shuffled = shuffle(family);
       const a = shuffled[0];
-      const b = shuffled[1];
+      const b = shuffled[1] ?? shuffled[0]; // guard against single-element families
       return {
         id: `ch-${counter}`,
         type: "missing-number",
@@ -201,14 +220,50 @@ export function generateChallenge(playerLevel: number = 0): Challenge {
         emoji: "\u{2753}",
         targetFraction: a,
         answer: b,
-        xpReward: 3,
+        xpReward: Math.round(3 * xpMultiplier),
         hint: `${a.n}/${a.d} is the same amount as something over ${b.d}...`,
       };
     }
 
     default:
-      return generateChallenge(playerLevel);
+      return generateChallenge(playerLevel, difficulty);
   }
+}
+
+/**
+ * Generate a challenge with 30% chance of reviewing previously mastered skills.
+ * This implements spaced/interleaved practice for better retention.
+ */
+export function generateChallengeWithReview(
+  playerLevel: number = 0,
+  difficulty: Difficulty = "beginner",
+  masteredSkills?: string[]
+): Challenge {
+  // 30% chance of review if there are mastered skills
+  if (masteredSkills && masteredSkills.length > 0 && Math.random() < 0.3) {
+    counter++;
+    const xpMultiplier = difficulty === "expert" ? 2 : difficulty === "intermediate" ? 1.5 : 1;
+
+    // Review challenge: always a find-equivalent (the core skill)
+    const families = familiesForDifficulty(difficulty);
+    const family = pickRandom(families);
+    const shuffled = shuffle(family);
+    const target = shuffled[0];
+    const answer = shuffled[1] ?? shuffled[0];
+
+    return {
+      id: `review-${counter}`,
+      type: "find-equivalent",
+      prompt: `Quick review! Find a fraction equal to ${target.n}/${target.d}!`,
+      emoji: "\u{1F504}",
+      targetFraction: target,
+      answer,
+      xpReward: Math.round(2 * xpMultiplier),
+      hint: `Remember this one? Think about equivalent fractions...`,
+    };
+  }
+
+  return generateChallenge(playerLevel, difficulty);
 }
 
 /** Check if a dropped fraction matches the challenge answer */

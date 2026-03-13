@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import type { FractionDrop } from "./FractionBattle";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
+import { simplifyPair, fractionsEqualRaw } from "@/lib/fractions";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,29 +39,18 @@ interface SlotState {
   droppedFraction: Fraction | null;
 }
 
-// ── Fraction math (no external libs) ─────────────────────────────────────────
-
-function gcd(a: number, b: number): number {
-  a = Math.abs(a);
-  b = Math.abs(b);
-  while (b) {
-    [a, b] = [b, a % b];
-  }
-  return a;
-}
+// ── Fraction math (using shared helpers) ─────────────────────────────────────
 
 function simplify(n: number, d: number): Fraction {
-  const g = gcd(n, d);
-  return { numerator: n / g, denominator: d / g };
+  return simplifyPair(n, d);
 }
 
 function scaleFraction(f: Fraction, multiplier: number): Fraction {
   return simplify(f.numerator * multiplier, f.denominator);
 }
 
-/** Cross-multiply comparison: a/b == c/d  ⟺  a*d == c*b */
 function fractionsEqual(a: Fraction, b: Fraction): boolean {
-  return a.numerator * b.denominator === b.numerator * a.denominator;
+  return fractionsEqualRaw(a, b);
 }
 
 function fractionToString(f: Fraction): string {
@@ -68,6 +58,7 @@ function fractionToString(f: Fraction): string {
   if (f.denominator === 1) return `${f.numerator}`;
   return `${f.numerator}/${f.denominator}`;
 }
+
 
 // ── Recipe data ──────────────────────────────────────────────────────────────
 
@@ -420,7 +411,7 @@ export default function RecipeChallenge({ onComplete, pendingDrop, onXP }: Recip
   }
 
   // Auto-celebrate when all correct
-  useMemo(() => {
+  useEffect(() => {
     if (allCorrect && scaledIngredients.length > 0 && !celebrating && !allDone) {
       // Small delay so the last checkmark animation plays first
       setTimeout(triggerCelebration, 400);
@@ -454,9 +445,9 @@ export default function RecipeChallenge({ onComplete, pendingDrop, onXP }: Recip
 
       {/* Recipe selector pills */}
       <div className="flex gap-2 flex-wrap justify-center">
-        {RECIPES.map((r, i) => (
+        {allRecipes.map((r, i) => (
           <button
-            key={r.name}
+            key={`${r.name}-${i}`}
             onClick={() => selectRecipe(i)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border-2 ${
               i === currentIndex
@@ -574,7 +565,7 @@ export default function RecipeChallenge({ onComplete, pendingDrop, onXP }: Recip
 
       {/* Progress dots */}
       <div className="flex gap-1.5">
-        {RECIPES.map((_, i) => (
+        {allRecipes.map((_, i) => (
           <div
             key={i}
             className={`w-2 h-2 rounded-full transition-colors ${

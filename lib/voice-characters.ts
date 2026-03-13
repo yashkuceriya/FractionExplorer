@@ -1,4 +1,6 @@
-const STORAGE_KEY = "voice-character";
+import { scopedKey } from "./active-student-id";
+
+const BASE_KEY = "voice-character";
 
 export interface VoiceCharacter {
   id: string;
@@ -8,9 +10,33 @@ export interface VoiceCharacter {
   pitch: number;
   rate: number;
   voiceHints: string[]; // preferred Web Speech API voice name fragments
+  color?: string;
+  elevenLabsVoiceId?: string;
 }
 
 export const VOICE_CHARACTERS: VoiceCharacter[] = [
+  {
+    id: "dora",
+    name: "Dora",
+    emoji: "👧🏽",
+    description: "Your explorer buddy!",
+    pitch: 1.3,
+    rate: 1.1,
+    voiceHints: ["Samantha", "Tessa", "Google"],
+    color: "#F13EA1",
+    elevenLabsVoiceId: "cgSgspJ2msm6clMCkdW9", // Jessica — playful, bright, warm young female
+  },
+  {
+    id: "diego",
+    name: "Diego",
+    emoji: "👦🏽",
+    description: "Animal rescue hero!",
+    pitch: 1.15,
+    rate: 1.0,
+    voiceHints: ["Daniel", "Alex", "Google UK English Male"],
+    color: "#0F73B8",
+    elevenLabsVoiceId: "TX3LPaxmHKxFdv7VOQHJ", // Liam — energetic, young male
+  },
   {
     id: "frax",
     name: "Frax",
@@ -60,7 +86,7 @@ export const VOICE_CHARACTERS: VoiceCharacter[] = [
 
 export function loadSelectedCharacter(): VoiceCharacter {
   try {
-    const id = localStorage.getItem(STORAGE_KEY);
+    const id = localStorage.getItem(scopedKey(BASE_KEY));
     if (id) {
       const found = VOICE_CHARACTERS.find((c) => c.id === id);
       if (found) return found;
@@ -73,7 +99,7 @@ export function loadSelectedCharacter(): VoiceCharacter {
 
 export function saveSelectedCharacter(id: string) {
   try {
-    localStorage.setItem(STORAGE_KEY, id);
+    localStorage.setItem(scopedKey(BASE_KEY), id);
   } catch {
     // ignore
   }

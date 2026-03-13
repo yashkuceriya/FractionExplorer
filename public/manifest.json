@@ -1,11 +1,11 @@
 {
-  "name": "Fraction Explorer — AI Math Tutor",
-  "short_name": "Fractions",
-  "description": "Learn fraction equivalence with an AI-powered math tutor",
+  "name": "DorFrac — Fraction Adventure!",
+  "short_name": "DorFrac",
+  "description": "Learn fractions with Dora-style adventures — split, merge, compare, and explore!",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#6366f1",
+  "background_color": "#fdf2f8",
+  "theme_color": "#F13EA1",
   "orientation": "any",
   "icons": [
     {

@@ -67,7 +67,13 @@ export default function ChatPanel({
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto chat-scroll p-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto chat-scroll p-3" aria-live="polite" aria-label="Chat messages">
+        {messages.length === 0 && !isLoading && (
+          <div className="flex flex-col items-center justify-center h-full text-center px-4 opacity-60">
+            <p className="text-2xl mb-1">👋</p>
+            <p className="text-xs font-bold text-amber-600">Say hi to start your adventure!</p>
+          </div>
+        )}
         {messages.map((msg) => (
           <MessageBubble key={msg.id} role={msg.role} content={msg.content} characterId={characterId} />
         ))}

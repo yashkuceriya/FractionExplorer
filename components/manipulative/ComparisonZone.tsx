@@ -9,12 +9,14 @@ interface ComparisonZoneProps {
   side: "left" | "right";
   fraction: FractionData | null;
   onClear: () => void;
+  onTapPlace?: () => void;
 }
 
 export default function ComparisonZone({
   side,
   fraction,
   onClear,
+  onTapPlace,
 }: ComparisonZoneProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: `comparison-${side}`,
@@ -24,12 +26,17 @@ export default function ComparisonZone({
     <motion.div
       ref={setNodeRef}
       animate={{
-        scale: isOver ? 1.03 : 1,
+        scale: isOver ? 1.06 : 1,
       }}
       transition={{ type: "tween", duration: 0.15 }}
+      onClick={() => {
+        if (!fraction && onTapPlace) {
+          onTapPlace();
+        }
+      }}
       className={`relative flex-1 rounded-2xl border-2 border-dashed p-3 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[130px] transition-colors ${
         isOver
-          ? "bg-amber-100/60 border-amber-400 shadow-inner"
+          ? "bg-amber-100/80 border-amber-400 shadow-inner shadow-amber-200/40"
           : fraction
           ? "bg-white shadow-sm border-amber-200"
           : "bg-gradient-to-b from-amber-50/40 to-orange-50/20 border-amber-200/50"
@@ -50,7 +57,7 @@ export default function ComparisonZone({
               e.stopPropagation();
               onClear();
             }}
-            className="text-[10px] text-gray-300 active:text-red-400 transition-colors px-2 py-1 rounded-md active:bg-red-50 font-medium"
+            className="text-xs text-gray-400 active:text-red-400 transition-colors px-3 py-2 min-h-[44px] min-w-[44px] rounded-lg active:bg-red-50 font-medium"
           >
             ✕ remove
           </button>
@@ -61,7 +68,7 @@ export default function ComparisonZone({
             {side === "left" ? "👈" : "👉"}
           </div>
           <p className="text-[11px] font-bold text-amber-400">
-            Drag here
+            {onTapPlace ? "Tap to place" : "Drag here"}
           </p>
         </div>
       )}

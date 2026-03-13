@@ -10,11 +10,13 @@ interface SwiperFeedbackProps {
 // Never say "wrong" — always encouraging, Dora-style warm redirects
 const SWIPER_PHRASES = [
   { text: "Different sizes! Let's keep looking!", emoji: "🤔" },
-  { text: "Good try! I think there's a better match!", emoji: "💪" },
+  { text: "Good try! There's a better match!", emoji: "💪" },
   { text: "Ooh so close! Try another one!", emoji: "🔍" },
-  { text: "Not quite twins! But we'll find them!", emoji: "🌟" },
-  { text: "Interesting! Those are different. What else can we try?", emoji: "🧐" },
-  { text: "Almost! Don't give up — explorers never give up!", emoji: "🗺️" },
+  { text: "Not quite twins! We'll find them!", emoji: "🌟" },
+  { text: "Almost! Try again!", emoji: "💪" },
+  { text: "Backpack says try a different one!", emoji: "🎒" },
+  { text: "Explorers never give up! LET'S GO!", emoji: "🗺️" },
+  { text: "SO close! You can do it!", emoji: "🌟" },
 ];
 
 export default function SwiperFeedback({ show, onComplete }: SwiperFeedbackProps) {

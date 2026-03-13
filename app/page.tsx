@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import TutorAvatar from "@/components/chat/TutorAvatar";
 import XPBar from "@/components/feedback/XPBar";
 import VoiceCharacterPicker from "@/components/voice/VoiceCharacterPicker";
-import { loadProgress, LEVEL_NAMES, LEVEL_EMOJIS, xpForNextLevel, MODE_UNLOCK_LEVELS, type PlayerProgress } from "@/lib/progress";
+import { loadProgress, LEVEL_NAMES, LEVEL_EMOJIS, type PlayerProgress } from "@/lib/progress";
 import { loadSelectedCharacter, type VoiceCharacter } from "@/lib/voice-characters";
+import { useStudent } from "@/lib/student-context";
 
-// Jungle scenery — floating around the edges
 const JUNGLE_ITEMS = [
   { text: "🌿", x: 4, y: 8, size: "text-3xl" },
   { text: "🌺", x: 92, y: 12, size: "text-2xl" },
@@ -17,10 +17,13 @@ const JUNGLE_ITEMS = [
   { text: "🌴", x: 88, y: 80, size: "text-3xl" },
   { text: "🦜", x: 85, y: 45, size: "text-2xl" },
   { text: "🌻", x: 12, y: 50, size: "text-xl" },
+  { text: "🗺️", x: 50, y: 5, size: "text-2xl" },
+  { text: "🎒", x: 15, y: 30, size: "text-xl" },
 ];
 
 export default function WelcomePage() {
   const router = useRouter();
+  const { student, isGuest } = useStudent();
   const [progress, setProgress] = useState<PlayerProgress | null>(null);
   const [voiceChar, setVoiceChar] = useState<VoiceCharacter | null>(null);
 
@@ -32,15 +35,15 @@ export default function WelcomePage() {
   const isReturning = progress && progress.xp > 0;
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center bg-gradient-to-b from-sky-200 via-amber-50 to-emerald-100 p-4 sm:p-6 relative overflow-hidden">
+    <div className="min-h-dvh flex flex-col items-center justify-center bg-gradient-to-b from-pink-100 via-purple-50 to-green-100 p-4 sm:p-6 relative overflow-hidden">
       {/* Jungle scenery */}
       {JUNGLE_ITEMS.map((f, i) => (
         <motion.span
           key={i}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.25, y: [0, -8, 0] }}
+          animate={{ opacity: 0.3, y: [0, -8, 0] }}
           transition={{
-            opacity: { delay: i * 0.2, duration: 0.8 },
+            opacity: { delay: i * 0.15, duration: 0.8 },
             y: { repeat: Infinity, duration: 3 + i * 0.5, ease: "easeInOut" },
           }}
           className={`absolute ${f.size} pointer-events-none select-none`}
@@ -56,7 +59,7 @@ export default function WelcomePage() {
         transition={{ duration: 0.5 }}
         className="text-center max-w-md w-full relative z-10"
       >
-        {/* Big character — the star of the show */}
+        {/* Big character avatar */}
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -67,7 +70,7 @@ export default function WelcomePage() {
             <motion.div
               animate={{ scale: [1, 1.08, 1] }}
               transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-              className="absolute inset-0 -m-6 rounded-full bg-gradient-to-r from-amber-400/25 via-orange-300/25 to-emerald-400/25 blur-2xl"
+              className="absolute inset-0 -m-6 rounded-full bg-gradient-to-r from-pink-400/25 via-purple-300/25 to-green-400/25 blur-2xl"
             />
             <div className="relative">
               <TutorAvatar size={120} animate characterId={voiceChar?.id} />
@@ -75,30 +78,31 @@ export default function WelcomePage() {
           </div>
         </motion.div>
 
-        {/* Speech bubble — like Dora talking to camera */}
+        {/* Speech bubble */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
           className="relative inline-block mb-4"
         >
-          <div className="bg-white rounded-2xl px-5 py-3 shadow-lg border-2 border-amber-200 relative max-w-[300px] mx-auto">
-            <p className="text-sm font-black text-amber-900 leading-snug">
-              {isReturning
-                ? `You're back! ${LEVEL_EMOJIS[progress.level]} Ready for more fraction adventures?`
-                : `Hola! I'm ${voiceChar?.name ?? "Frax"}! Let's go on a fraction adventure together!`
+          <div className="bg-white rounded-2xl px-5 py-3 shadow-lg border-2 border-pink-200 relative max-w-[300px] mx-auto">
+            <p className="text-sm font-black text-purple-900 leading-snug">
+              {student
+                ? `Hey ${student.name}! ${LEVEL_EMOJIS[progress?.level ?? 0]} Ready for more fraction adventures?`
+                : isReturning
+                ? `You're back! ${LEVEL_EMOJIS[progress!.level]} Ready for more adventures?`
+                : `Hey! I'm ${voiceChar?.name ?? "Frax"}! Let's go on a fraction adventure together!`
               }
             </p>
-            {/* Speech bubble tail */}
-            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l-2 border-t-2 border-amber-200 rotate-45" />
+            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l-2 border-t-2 border-pink-200 rotate-45" />
           </div>
         </motion.div>
 
         {/* Title */}
-        <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-500 bg-clip-text text-transparent mb-0.5 tracking-tight">
+        <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-green-500 bg-clip-text text-transparent mb-0.5 tracking-tight">
           DorFrac
         </h1>
-        <p className="text-sm font-black text-amber-600/80 mb-4 tracking-wide">Fraction Adventure!</p>
+        <p className="text-sm font-black text-purple-500/80 mb-4 tracking-wide">Fraction Adventure!</p>
 
         {/* Progress for returning players */}
         {isReturning && progress ? (
@@ -106,7 +110,7 @@ export default function WelcomePage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="mb-4 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border-2 border-amber-100 p-3"
+            className="mb-4 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border-2 border-pink-100 p-3"
           >
             <XPBar
               xp={progress.xp}
@@ -116,12 +120,12 @@ export default function WelcomePage() {
             />
             <div className="flex items-center justify-center gap-3 mt-2 text-xs">
               {progress.consecutiveDays > 1 && (
-                <span className="text-orange-600 font-black">
+                <span className="text-pink-600 font-black">
                   {progress.consecutiveDays} day streak!
                 </span>
               )}
               {progress.discoveredEquivalences.length > 0 && (
-                <span className="font-black text-emerald-600">
+                <span className="font-black text-green-600">
                   {progress.discoveredEquivalences.length} discoveries
                 </span>
               )}
@@ -132,7 +136,7 @@ export default function WelcomePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-base text-amber-700/60 mb-5 font-bold"
+            className="text-base text-purple-600/60 mb-5 font-bold"
           >
             Discover fraction twins hiding in the jungle!
           </motion.p>
@@ -153,24 +157,24 @@ export default function WelcomePage() {
           </motion.div>
         )}
 
-        {/* Big CTA button — Dora "Let's GO!" energy */}
+        {/* Big CTA button */}
         <motion.button
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => router.push("/lesson")}
-          className="px-14 py-4 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 text-white text-xl font-black rounded-2xl shadow-xl shadow-orange-400/40 active:shadow-md transition-shadow border-2 border-orange-300/50 tracking-wide"
+          className="px-14 py-4 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 text-white text-xl font-black rounded-2xl shadow-xl shadow-pink-400/40 active:shadow-md transition-shadow border-2 border-pink-300/50 tracking-wide"
         >
-          {isReturning ? "Vamonos!" : "Let's GO!"}
+          {isReturning ? "Let's GO!" : "Start Adventure!"}
         </motion.button>
 
-        {/* Mini feature icons */}
+        {/* Feature badges */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="mt-5 flex items-center justify-center gap-2.5"
+          className="mt-5 flex items-center justify-center gap-2.5 flex-wrap"
         >
           {[
             { emoji: "🗺️", label: "Map" },
@@ -180,11 +184,53 @@ export default function WelcomePage() {
           ].map((f) => (
             <span
               key={f.label}
-              className="bg-white/60 text-[10px] font-black text-amber-700 px-2 py-1 rounded-full border border-amber-200/60"
+              className="bg-white/60 text-[10px] font-black text-purple-700 px-2 py-1 rounded-full border border-purple-200/60"
             >
               {f.emoji} {f.label}
             </span>
           ))}
+        </motion.div>
+
+        {/* Auth links */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="mt-4 flex items-center justify-center gap-3"
+        >
+          {isGuest ? (
+            <>
+              <button
+                onClick={() => router.push("/login")}
+                className="text-xs font-bold text-purple-500"
+              >
+                Parent Login
+              </button>
+              <span className="text-purple-300">|</span>
+              <button
+                onClick={() => router.push("/signup")}
+                className="text-xs font-bold text-purple-500"
+              >
+                Sign Up
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => router.push("/pick-student")}
+                className="text-xs font-bold text-purple-500"
+              >
+                Switch Student
+              </button>
+              <span className="text-purple-300">|</span>
+              <button
+                onClick={() => router.push("/parent/dashboard")}
+                className="text-xs font-bold text-purple-500"
+              >
+                Parent Dashboard
+              </button>
+            </>
+          )}
         </motion.div>
       </motion.div>
     </div>

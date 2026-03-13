@@ -123,7 +123,7 @@ export default function FractionRain({ onXP }: FractionRainProps) {
 
   const setupZones = useCallback((currentScore: number) => {
     const diff = getDifficulty(currentScore);
-    const families = shuffle([...EQUIVALENCE_FAMILIES.keys()]).slice(0, diff.zones);
+    const families = shuffle(EQUIVALENCE_FAMILIES.map((_, i) => i)).slice(0, diff.zones);
     setZones(families.map((fi) => ({
       label: EQUIVALENCE_FAMILIES[fi][0],
       familyIndex: fi,

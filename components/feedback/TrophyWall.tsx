@@ -50,7 +50,7 @@ export default function TrophyWall({ trophies }: TrophyWallProps) {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="fixed top-0 right-0 h-full w-80 max-w-[85vw] z-40 bg-white shadow-2xl border-l border-gray-100 flex flex-col"
+              className="fixed top-0 right-0 h-full w-80 max-w-[85vw] z-40 bg-white shadow-2xl border-l border-gray-100 flex flex-col pr-[env(safe-area-inset-right)]"
             >
               <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                 <h3 className="font-bold text-gray-800">

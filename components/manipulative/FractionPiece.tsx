@@ -67,6 +67,9 @@ export default function FractionPiece({
         style={style}
         {...listeners}
         {...attributes}
+        role="button"
+        aria-roledescription="draggable fraction"
+        aria-label={`${numerator} over ${denominator}`}
         animate={{
           opacity: isDragging ? 0.3 : 1,
           scale: isDragging ? 0.85 : isMergeTarget ? 1.08 : 1,
@@ -107,6 +110,7 @@ export default function FractionPiece({
       <div className="flex items-center gap-1.5" style={{ touchAction: "auto" }}>
         {canSmash && onSmash && (
           <button
+            aria-label={`Split ${numerator} over ${denominator}`}
             onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -124,6 +128,7 @@ export default function FractionPiece({
 
         {onMerge && !isDragging && (
           <button
+            aria-label={`Merge ${numerator} over ${denominator}`}
             onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();

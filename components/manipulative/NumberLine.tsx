@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useMemo } from "react";
+import { fractionsEqualRaw } from "@/lib/fractions";
 
 interface NumberLineProps {
   fractions: Array<{
@@ -26,12 +27,7 @@ const LINE_Y = 48;
 const MARKER_RADIUS = 6;
 const EQUIVALENT_OFFSET = 28;
 
-function fractionsEqual(
-  a: { numerator: number; denominator: number },
-  b: { numerator: number; denominator: number }
-) {
-  return a.numerator * b.denominator === b.numerator * a.denominator;
-}
+const fractionsEqual = fractionsEqualRaw;
 
 export default function NumberLine({ fractions, width }: NumberLineProps) {
   // Group fractions that land on the same position (equivalent fractions)

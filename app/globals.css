@@ -1,27 +1,32 @@
 @import "tailwindcss";
 
 @theme {
-  --color-tutor: #e97818;
-  --color-tutor-light: #fdba74;
-  --color-tutor-dark: #c2410c;
-  --color-student: #10b981;
-  --color-student-light: #6ee7b7;
+  /* Dora palette */
+  --color-tutor: #F13EA1;
+  --color-tutor-light: #f9a8d4;
+  --color-tutor-dark: #be185d;
+  --color-student: #0F73B8;
+  --color-student-light: #7dd3fc;
   --color-celebrate: #f59e0b;
   --color-fraction-1: #ef4444;
-  --color-fraction-2: #3b82f6;
-  --color-fraction-3: #8b5cf6;
-  --color-fraction-4: #f97316;
-  --color-fraction-5: #14b8a6;
-  --color-surface: #fff9f0;
+  --color-fraction-2: #0F73B8;
+  --color-fraction-3: #844CA4;
+  --color-fraction-4: #E84622;
+  --color-fraction-5: #439F33;
+  --color-surface: #fef7ff;
   --color-surface-raised: #ffffff;
-  --color-adventure: #7c3aed;
-  --color-adventure-light: #c4b5fd;
-  --color-jungle: #15803d;
+  --color-adventure: #844CA4;
+  --color-adventure-light: #d8b4fe;
+  --color-jungle: #439F33;
   --color-jungle-light: #86efac;
 }
 
 html, body {
   overscroll-behavior: none;
+}
+
+/* Only disable selection on interactive/manipulative areas, not globally */
+[data-no-select], .fraction-workspace {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
@@ -85,8 +90,8 @@ button, a, input, [data-no-drag] {
 
 /* Confetti */
 @keyframes confetti-fall {
-  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  0% { transform: translateY(-100dvh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100dvh) rotate(720deg); opacity: 0; }
 }
 
 @keyframes bounce-in {

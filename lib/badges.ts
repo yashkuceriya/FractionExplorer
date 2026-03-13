@@ -1,4 +1,6 @@
-const STORAGE_KEY = "earned-badges";
+import { scopedKey } from "./active-student-id";
+
+const BASE_KEY = "earned-badges";
 
 export interface Badge {
   id: string;
@@ -25,7 +27,7 @@ export interface StudentStats {
 
 export function loadEarnedBadges(): string[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(scopedKey(BASE_KEY));
     if (!raw) return [];
     return JSON.parse(raw);
   } catch {
@@ -35,7 +37,7 @@ export function loadEarnedBadges(): string[] {
 
 function saveEarnedBadges(ids: string[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    localStorage.setItem(scopedKey(BASE_KEY), JSON.stringify(ids));
   } catch {
     // ignore
   }

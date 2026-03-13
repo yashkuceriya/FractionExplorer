@@ -10,6 +10,8 @@ interface CompletionScreenProps {
   earnedBadges: string[];
   onRestart: () => void;
   onHome: () => void;
+  onNextEpisode?: () => void;
+  episodeTitle?: string;
 }
 
 export default function CompletionScreen({
@@ -19,6 +21,8 @@ export default function CompletionScreen({
   earnedBadges,
   onRestart,
   onHome,
+  onNextEpisode,
+  episodeTitle,
 }: CompletionScreenProps) {
   if (!show) return null;
 
@@ -61,7 +65,7 @@ export default function CompletionScreen({
           transition={{ delay: 0.8 }}
           className="text-2xl font-bold text-gray-800 mb-2"
         >
-          Lesson Complete!
+          {episodeTitle ? `${episodeTitle} Complete!` : "Lesson Complete!"}
         </motion.h2>
 
         <motion.p
@@ -123,13 +127,21 @@ export default function CompletionScreen({
         >
           <button
             onClick={onRestart}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-tutor to-tutor-dark text-white font-semibold rounded-xl active:opacity-80"
+            className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl active:opacity-80"
           >
             Play Again
           </button>
+          {onNextEpisode && (
+            <button
+              onClick={onNextEpisode}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-bold rounded-xl active:opacity-80 min-h-[44px]"
+            >
+              Next Episode →
+            </button>
+          )}
           <button
             onClick={onHome}
-            className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl active:opacity-80"
+            className="flex-1 px-4 py-3 bg-gradient-to-r from-tutor to-tutor-dark text-white font-semibold rounded-xl active:opacity-80"
           >
             Home
           </button>

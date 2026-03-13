@@ -1,23 +1,24 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useChat } from "ai/react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import ChatPanel from "@/components/chat/ChatPanel";
 import FractionWorkspace from "@/components/manipulative/FractionWorkspace";
-import ProgressTracker from "@/components/feedback/ProgressTracker";
 import Celebration from "@/components/feedback/Celebration";
 import SwiperFeedback from "@/components/feedback/SwiperFeedback";
+import SwiperChallenge from "@/components/feedback/SwiperChallenge";
 import CompletionScreen from "@/components/feedback/CompletionScreen";
 import VoiceNarrator from "@/components/voice/VoiceNarrator";
-import UsageStats from "@/components/feedback/UsageStats";
 import OnboardingOverlay from "@/components/manipulative/OnboardingOverlay";
 import TrophyWall from "@/components/feedback/TrophyWall";
 import StreakCounter from "@/components/feedback/StreakCounter";
 import PhaseTransitionCard from "@/components/feedback/PhaseTransitionCard";
 import FractionMap from "@/components/feedback/FractionMap";
-import { type FractionData, fractionToString, areFractionsEqual } from "@/lib/fractions";
+import EpisodeSelect from "@/components/EpisodeSelect";
+import JourneyStrip from "@/components/JourneyStrip";
+import { type FractionData, fractionToString } from "@/lib/fractions";
 import {
   type LessonState,
   INITIAL_LESSON_STATE,
@@ -35,9 +36,13 @@ import { isMuted, setMuted, isMusicMuted, setMusicMuted, startMusic, stopMusic, 
 import XPBar from "@/components/feedback/XPBar";
 import SessionGoalCard from "@/components/feedback/SessionGoalCard";
 import MissionCard from "@/components/feedback/MissionCard";
-import VoiceCharacterPicker from "@/components/voice/VoiceCharacterPicker";
 import { loadSelectedCharacter, type VoiceCharacter } from "@/lib/voice-characters";
-import { generateChallenge, checkAnswer, type Challenge } from "@/lib/challenges";
+import { generateChallengeWithReview, checkAnswer, type Challenge } from "@/lib/challenges";
+import { useStudent } from "@/lib/student-context";
+import { CURRICULUM, type Episode } from "@/lib/curriculum";
+import { loadMastery, recordAttempt, completeEpisode, getNextEpisode } from "@/lib/mastery";
+import { getMisconceptionContext } from "@/lib/misconceptions";
+import EpisodePlayer from "@/components/manipulative/EpisodePlayer";
 
 interface MatchRecord {
   left: string;
@@ -45,15 +50,23 @@ interface MatchRecord {
   equal: boolean;
 }
 
-// Session persistence keys
-const STORAGE_KEY = "synthesis-tutor-session";
+// Session persistence — scoped per student
+import { getActiveStudentId } from "@/lib/active-student-id";
+
+const SESSION_BASE_KEY = "synthesis-tutor-session";
+
+function sessionKey(): string {
+  const sid = getActiveStudentId();
+  return sid ? `${SESSION_BASE_KEY}:${sid}` : SESSION_BASE_KEY;
+}
 
 function saveSession(state: {
   lessonState: LessonState;
   matchHistory: MatchRecord[];
+  episodeId?: number;
 }) {
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    sessionStorage.setItem(sessionKey(), JSON.stringify(state));
   } catch {
     // Storage unavailable — ignore
   }
@@ -62,9 +75,10 @@ function saveSession(state: {
 function loadSession(): {
   lessonState: LessonState;
   matchHistory: MatchRecord[];
+  episodeId?: number;
 } | null {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = sessionStorage.getItem(sessionKey());
     if (!raw) return null;
     return JSON.parse(raw);
   } catch {
@@ -74,7 +88,7 @@ function loadSession(): {
 
 function clearSession() {
   try {
-    sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(sessionKey());
   } catch {
     // ignore
   }
@@ -82,11 +96,13 @@ function clearSession() {
 
 export default function LessonPage() {
   const router = useRouter();
+  const { student, difficulty, syncProgress } = useStudent();
   const [lessonState, setLessonState] = useState<LessonState>(INITIAL_LESSON_STATE);
   const [comparisonLeft, setComparisonLeft] = useState<FractionData | null>(null);
   const [comparisonRight, setComparisonRight] = useState<FractionData | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showSwiper, setShowSwiper] = useState(false);
+  const [showSwiperChallenge, setShowSwiperChallenge] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true); // Voice-first for kids
@@ -96,6 +112,8 @@ export default function LessonPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const hasInitialized = useRef(false);
+  const [restartKey, setRestartKey] = useState(0);
+  const restartContentRef = useRef<string | null>(null);
 
   // Phase 2: Onboarding
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -134,10 +152,14 @@ export default function LessonPage() {
   // Phase 4b: AI-suggested challenge mode switch
   const [suggestedMode, setSuggestedMode] = useState<string | null>(null);
 
-  // Game event queue — only send to AI when not loading, max 1 per 1.5s
+  // Game event queue — batch system events, only send to AI when not loading
   const gameEventQueue = useRef<string | null>(null);
   const gameEventTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLoadingRef = useRef(false);
+
+  // System event batcher — collects rapid-fire system events and sends as ONE message
+  const systemEventBuffer = useRef<string[]>([]);
+  const systemEventTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Voice character
   const [voiceCharacter, setVoiceCharacter] = useState<VoiceCharacter>(() => loadSelectedCharacter());
@@ -145,6 +167,21 @@ export default function LessonPage() {
   // Mission / challenge system
   const [currentMission, setCurrentMission] = useState<Challenge | null>(null);
   const [missionSolved, setMissionSolved] = useState(false);
+
+  // Episode-based flow
+  const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null);
+
+  // Teaching intro — for early episodes, show only chat (no workspace) while AI teaches what fractions are
+  const [teachingIntro, setTeachingIntro] = useState(false);
+
+  // Episode mode: true = structured curriculum (EpisodePlayer), false = free-play workspace
+  const [episodeMode, setEpisodeMode] = useState(true);
+
+  // Journey strip — map lesson phase to stop index
+  const PHASE_TO_JOURNEY: Record<string, number> = {
+    intro: 0, exploration: 1, discovery: 2, practice: 3, assessment: 4, celebration: 5,
+  };
+  const journeyIndex = PHASE_TO_JOURNEY[lessonState.phase] ?? 0;
 
   // Phase 5: Mute toggle
   const [soundMuted, setSoundMuted] = useState(false);
@@ -157,7 +194,7 @@ export default function LessonPage() {
     setSoundMuted(isMuted());
     setBgMusicMuted(isMusicMuted());
     // Start first mission
-    setCurrentMission(generateChallenge(loadProgress().level));
+    setCurrentMission(generateChallengeWithReview(loadProgress().level, difficulty, Object.values(loadMastery().skills).filter(s => s.status === "mastered").map(s => s.skill)));
   }, []);
 
   // Start/stop background music based on toggle
@@ -183,6 +220,11 @@ export default function LessonPage() {
     if (saved && RESTORABLE_PHASES.has(saved.lessonState.phase)) {
       setLessonState(saved.lessonState);
       setMatchHistory(saved.matchHistory);
+      // Restore episode selection from session
+      if (saved.episodeId) {
+        const ep = CURRICULUM.find((e) => e.id === saved.episodeId);
+        if (ep) setSelectedEpisode(ep);
+      }
       didRestoreSession.current = true;
     } else if (saved) {
       // Clear stale completed/late session
@@ -192,11 +234,11 @@ export default function LessonPage() {
 
   // Persist lesson state on changes
   useEffect(() => {
-    saveSession({ lessonState, matchHistory });
+    saveSession({ lessonState, matchHistory, episodeId: selectedEpisode?.id });
   }, [lessonState, matchHistory]);
 
-  // Build workspace state sent with every API call
-  const buildWorkspaceBody = useCallback(() => ({
+  // Build workspace state sent with every API call — useMemo so body updates reactively
+  const workspaceBody = useMemo(() => ({
     workspaceState: {
       comparisonLeft: comparisonLeft ? fractionToString(comparisonLeft) : null,
       comparisonRight: comparisonRight ? fractionToString(comparisonRight) : null,
@@ -209,12 +251,22 @@ export default function LessonPage() {
       playerLevel: playerProgress.level,
       dailyXP: playerProgress.dailyXP,
       dailyGoal: playerProgress.dailyGoal,
+      difficulty,
+      studentName: student?.name,
+      misconceptionContext: getMisconceptionContext() || undefined,
+      currentEpisode: selectedEpisode ? {
+        id: selectedEpisode.id,
+        title: selectedEpisode.title,
+        skills: selectedEpisode.skills,
+        missionIndex: lessonState.step - 1,
+        totalMissions: selectedEpisode.missions.length,
+      } : undefined,
     },
-  }), [comparisonLeft, comparisonRight, lessonState, matchHistory, consecutiveFailures, playerProgress]);
+  }), [comparisonLeft, comparisonRight, lessonState, matchHistory, consecutiveFailures, playerProgress, difficulty, student, selectedEpisode]);
 
   const { messages, append, setMessages, isLoading } = useChat({
     api: "/api/tutor",
-    body: buildWorkspaceBody(),
+    body: workspaceBody,
     onError: (error) => {
       setApiError(
         error.message?.includes("API key")
@@ -224,20 +276,57 @@ export default function LessonPage() {
     },
   });
 
+  // ── Stable refs for `append` and `setMessages` ──
+  // useChat returns a new `append` identity on every `messages` change.
+  // If we put `append` directly into useCallback deps, it cascades through
+  // EVERY handler → causing infinite re-renders that freeze the iPad.
+  // Using a ref breaks this chain while always calling the latest version.
+  const appendRef = useRef(append);
+  appendRef.current = append;
+  const setMessagesRef = useRef(setMessages);
+  setMessagesRef.current = setMessages;
+
+  const stableAppend = useCallback(
+    (...args: Parameters<typeof append>) => appendRef.current(...args),
+    []
+  );
+  const stableSetMessages = useCallback(
+    (...args: Parameters<typeof setMessages>) => setMessagesRef.current(...args),
+    []
+  );
+
   // Sync loading state to ref for use in closures
   isLoadingRef.current = isLoading;
 
+  // Batch system events into a single AI message to prevent voice overlap
+  // Multiple events within 600ms get combined into one prompt
+  const flushSystemEvents = useCallback(() => {
+    if (systemEventBuffer.current.length === 0) return;
+    const combined = systemEventBuffer.current.join(" ");
+    systemEventBuffer.current = [];
+    stableAppend({ role: "user", content: combined });
+  }, [stableAppend]);
+
+  const batchSystemEvent = useCallback((event: string) => {
+    systemEventBuffer.current.push(event);
+    if (systemEventTimer.current) clearTimeout(systemEventTimer.current);
+    systemEventTimer.current = setTimeout(flushSystemEvents, 600);
+  }, [flushSystemEvents]);
+
   // Parse highlighted fractions from assistant messages
+  const lastParsedMsgId = useRef<string | null>(null);
   useEffect(() => {
     const lastMsg = messages[messages.length - 1];
-    if (lastMsg?.role === "assistant" && !isLoading) {
-      const matches = lastMsg.content.match(/\[(\d+\/\d+)\]/g);
-      if (matches) {
-        const fracs = matches.map((m) => m.slice(1, -1));
-        setHighlightedFractions(fracs);
-        if (highlightTimer.current) clearTimeout(highlightTimer.current);
-        highlightTimer.current = setTimeout(() => setHighlightedFractions([]), 10000);
-      }
+    if (!lastMsg || lastMsg.role !== "assistant" || isLoading) return;
+    if (lastMsg.id === lastParsedMsgId.current) return; // already parsed this message
+    lastParsedMsgId.current = lastMsg.id;
+
+    const matches = lastMsg.content.match(/\[(\d+\/\d+)\]/g);
+    if (matches) {
+      const fracs = matches.map((m) => m.slice(1, -1));
+      setHighlightedFractions(fracs);
+      if (highlightTimer.current) clearTimeout(highlightTimer.current);
+      highlightTimer.current = setTimeout(() => setHighlightedFractions([]), 10000);
     }
   }, [messages, isLoading]);
 
@@ -249,7 +338,7 @@ export default function LessonPage() {
     const lastMsg = messages[messages.length - 1];
     if (lastMsg?.role === "assistant" && lastMsg.content.includes("[ADVANCE_PHASE]")) {
       // Remove the tag from displayed message
-      setMessages((prev) =>
+      stableSetMessages((prev) =>
         prev.map((m) =>
           m.id === lastMsg.id
             ? { ...m, content: m.content.replace(/\s*\[ADVANCE_PHASE\]\s*/g, "").trim() }
@@ -263,6 +352,9 @@ export default function LessonPage() {
 
       advancePhaseCount.current++;
 
+      // End teaching intro when moving past intro phase
+      setTeachingIntro(false);
+
       // Show phase transition card then advance
       setLessonState((prev) => {
         const next = advanceLesson(prev);
@@ -270,12 +362,16 @@ export default function LessonPage() {
           setPhaseTransition(next.phase);
         }
         if (next.phase === "celebration") {
+          // Mark episode as completed in mastery system
+          if (selectedEpisode) {
+            completeEpisode(selectedEpisode.id);
+          }
           setTimeout(() => setShowCompletion(true), 1500);
         }
         return next;
       });
     }
-  }, [messages, setMessages]);
+  }, [messages, stableSetMessages]);
 
   // AI-driven mode switch: detect [SWITCH_MODE:xxx] in tutor responses
   useEffect(() => {
@@ -284,7 +380,7 @@ export default function LessonPage() {
       const match = lastMsg.content.match(/\[SWITCH_MODE:(\w+)\]/);
       if (match) {
         const mode = match[1];
-        setMessages((prev) =>
+        stableSetMessages((prev) =>
           prev.map((m) =>
             m.id === lastMsg.id
               ? { ...m, content: m.content.replace(/\s*\[SWITCH_MODE:\w+\]\s*/g, "").trim() }
@@ -294,7 +390,7 @@ export default function LessonPage() {
         setSuggestedMode(mode);
       }
     }
-  }, [messages, setMessages]);
+  }, [messages, stableSetMessages]);
 
   // Show onboarding after AI greeting loads (first visit only)
   useEffect(() => {
@@ -311,20 +407,35 @@ export default function LessonPage() {
     }
   }, [messages]);
 
-  // Send initial greeting with proper cleanup
+  // Send initial greeting with proper cleanup.
+  // Waits for episode selection (or a restored session) before initializing the AI.
   useEffect(() => {
+    if (!selectedEpisode && !didRestoreSession.current) return;
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
     abortRef.current = new AbortController();
 
-    // If we restored a mid-session, tell the AI we're resuming (not starting fresh)
-    // so it doesn't immediately try to advance phases.
-    const content = didRestoreSession.current
-      ? "[Student has resumed the lesson — continue where they left off. Do NOT advance the phase yet.]"
-      : "[Student has joined the lesson]";
+    // On restart, use the content set by the restart handler
+    let content = restartContentRef.current;
+    restartContentRef.current = null;
 
-    append({
+    if (!content) {
+      if (didRestoreSession.current) {
+        content = "[Student has resumed the lesson — continue where they left off. Do NOT advance the phase yet.]";
+      } else if (selectedEpisode) {
+        if (selectedEpisode.id <= 2) {
+          // Early episodes: teach the concept FIRST before any tasks
+          content = `[Student started Episode ${selectedEpisode.id}: "${selectedEpisode.title}". This kid may have NEVER seen a fraction before. Start by explaining what a fraction is using a simple sharing story (splitting a cookie, sharing pizza). Use 1-2 short sentences. Do NOT give them a task yet — just teach the concept warmly and ask if they're ready to try!]`;
+        } else {
+          content = `[Student started Episode ${selectedEpisode.id}: "${selectedEpisode.title}". Skills: ${selectedEpisode.skills.join(", ")}. Begin with the warmup!]`;
+        }
+      } else {
+        content = "[Student has joined the lesson]";
+      }
+    }
+
+    stableAppend({
       role: "user",
       content,
     });
@@ -332,20 +443,24 @@ export default function LessonPage() {
     return () => {
       abortRef.current?.abort();
     };
-  }, [append]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stableAppend, restartKey, selectedEpisode]);
 
   // Track last tutor message for voice narration
+  const lastTutorRef = useRef(lastTutorMessage);
   useEffect(() => {
     const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
-    if (lastAssistant && lastAssistant.content !== lastTutorMessage && !isLoading) {
+    if (lastAssistant && lastAssistant.content !== lastTutorRef.current && !isLoading) {
+      lastTutorRef.current = lastAssistant.content;
       setLastTutorMessage(lastAssistant.content);
     }
-  }, [messages, isLoading, lastTutorMessage]);
+  }, [messages, isLoading]);
 
   // XP reward helper — awards XP, updates progress state, shows toast, handles level-ups
   const awardXP = useCallback((amount: number, label: string) => {
     const result: XPResult = addXP(amount);
     setPlayerProgress(result.progress);
+    syncProgress();
 
     // XP toast
     setXpToast(`+${amount} XP — ${label}`);
@@ -353,27 +468,20 @@ export default function LessonPage() {
 
     // Level-up announcement
     if (result.leveledUp) {
-      // Send to Frax
-      append({
-        role: "user",
-        content: `[Student just leveled up to Level ${result.newLevel}! Celebrate enthusiastically!]`,
-      });
+      batchSystemEvent(`[Student reached Level ${result.newLevel}! Give a warm, natural congrats.]`);
     }
 
     // Newly unlocked modes
     if (result.newlyUnlockedModes.length > 0) {
       const modeNames = result.newlyUnlockedModes.join(", ");
-      append({
-        role: "user",
-        content: `[Student just unlocked new mode(s): ${modeNames}! Congratulate them and suggest trying it!]`,
-      });
+      batchSystemEvent(`[Student just unlocked: ${modeNames}. Casually mention it — "oh hey, you unlocked something new!"]`);
     }
 
     // Daily goal reached
     if (result.dailyGoalReached && !sessionGoalDismissed) {
       setTimeout(() => setShowSessionGoal(true), 1500);
     }
-  }, [append, sessionGoalDismissed]);
+  }, [batchSystemEvent, sessionGoalDismissed]);
 
   // Badge check helper
   const checkBadges = useCallback((stats: StudentStats) => {
@@ -394,9 +502,9 @@ export default function LessonPage() {
       setApiError(null);
       // Clear highlights on user interaction
       setHighlightedFractions([]);
-      append({ role: "user", content: message });
+      stableAppend({ role: "user", content: message });
     },
-    [append]
+    [stableAppend]
   );
 
   const handleComparisonChange = useCallback(
@@ -410,20 +518,12 @@ export default function LessonPage() {
       const leftStr = left ? fractionToString(left) : "empty";
       const rightStr = right ? fractionToString(right) : "empty";
 
-      if (left && right) {
-        const equal = areFractionsEqual(left, right);
-        append({
-          role: "user",
-          content: `[Student updated comparison zone: Left=${leftStr}, Right=${rightStr}. Result: these fractions ARE ${equal ? "EQUAL" : "NOT equal"}. ${equal ? `Both simplify to the same value.` : ""}]`,
-        });
-      } else if (left || right) {
-        append({
-          role: "user",
-          content: `[Student updated comparison zone: Left=${leftStr}, Right=${rightStr}]`,
-        });
+      // Only notify AI when ONE side is filled (the match handler covers both-filled case)
+      if ((left && !right) || (!left && right)) {
+        batchSystemEvent(`[Student updated comparison zone: Left=${leftStr}, Right=${rightStr}]`);
       }
     },
-    [append]
+    [batchSystemEvent]
   );
 
   const handleMatch = useCallback(
@@ -440,10 +540,25 @@ export default function LessonPage() {
 
       if (isEqual) {
         setShowCelebration(true);
-        setLessonState((prev) => ({
-          ...prev,
-          completedChallenges: prev.completedChallenges + 1,
-        }));
+        setLessonState((prev) => {
+          const newChallenges = prev.completedChallenges + 1;
+          // Auto-advance journey based on milestones
+          const PHASE_THRESHOLDS: Record<string, number> = {
+            intro: 1,        // 1 match → Forest
+            exploration: 3,  // 3 matches → Cave
+            discovery: 5,    // 5 matches → Mountain
+            practice: 8,     // 8 matches → Castle
+            assessment: 12,  // 12 matches → Victory!
+          };
+          const threshold = PHASE_THRESHOLDS[prev.phase];
+          if (threshold && newChallenges >= threshold) {
+            const next = advanceLesson({ ...prev, completedChallenges: newChallenges });
+            setPhaseTransition(next.phase);
+            batchSystemEvent(`[Student reached ${newChallenges} matches and advanced to the ${next.phase} phase! Celebrate and introduce the new area!]`);
+            return next;
+          }
+          return { ...prev, completedChallenges: newChallenges };
+        });
 
         // Update streak
         const newStreak = streak + 1;
@@ -467,10 +582,7 @@ export default function LessonPage() {
             awardXP(5, "New Discovery!");
             setDiscoveryToast(`✨ New Discovery: ${leftStr} = ${rightStr}!`);
             setTimeout(() => setDiscoveryToast(null), 3000);
-            append({
-              role: "user",
-              content: `[Student discovered a NEW equivalence: ${leftStr} = ${rightStr}! This is exciting — celebrate this discovery!]`,
-            });
+            batchSystemEvent(`[Student discovered a NEW equivalence: ${leftStr} = ${rightStr}! Celebrate!]`);
           } else {
             awardXP(2, "Match!");
           }
@@ -489,7 +601,7 @@ export default function LessonPage() {
         }
 
         // Check mission completion
-        if (currentMission && comparisonLeft && comparisonRight) {
+        if (currentMission && !missionSolved && comparisonLeft && comparisonRight) {
           const leftFrac = { numerator: comparisonLeft.numerator, denominator: comparisonLeft.denominator };
           const rightFrac = { numerator: comparisonRight.numerator, denominator: comparisonRight.denominator };
           if (
@@ -502,7 +614,7 @@ export default function LessonPage() {
             // Generate next mission after a beat
             setTimeout(() => {
               setMissionSolved(false);
-              setCurrentMission(generateChallenge(playerProgress.level));
+              setCurrentMission(generateChallengeWithReview(playerProgress.level, difficulty, Object.values(loadMastery().skills).filter(s => s.status === "mastered").map(s => s.skill)));
             }, 2500);
           } else if (currentMission.type === "share-puzzle") {
             if (checkAnswer(currentMission, leftFrac) || checkAnswer(currentMission, rightFrac)) {
@@ -510,7 +622,7 @@ export default function LessonPage() {
               awardXP(currentMission.xpReward, "Mission complete!");
               setTimeout(() => {
                 setMissionSolved(false);
-                setCurrentMission(generateChallenge(playerProgress.level));
+                setCurrentMission(generateChallengeWithReview(playerProgress.level, difficulty, Object.values(loadMastery().skills).filter(s => s.status === "mastered").map(s => s.skill)));
               }, 2500);
             }
           }
@@ -519,27 +631,27 @@ export default function LessonPage() {
         // Reset consecutive failures
         setConsecutiveFailures(0);
       } else {
-        // Wrong match — show Swiper feedback
-        setShowSwiper(true);
+        // Wrong match — show feedback
         setStreak(0);
         const newFailures = consecutiveFailures + 1;
         setConsecutiveFailures(newFailures);
 
+        // After 2+ consecutive failures, 25% chance of Swiper challenge
+        if (newFailures >= 2 && Math.random() < 0.25) {
+          setShowSwiperChallenge(true);
+        } else {
+          setShowSwiper(true);
+        }
+
         // Auto-hint at 2 and 4 failures
         if (newFailures === 2) {
-          append({
-            role: "user",
-            content: `[Student has made ${newFailures} incorrect attempts. Offer a gentle hint.]`,
-          });
+          batchSystemEvent(`[Student has made ${newFailures} incorrect attempts. Offer a gentle hint.]`);
         } else if (newFailures === 4) {
-          append({
-            role: "user",
-            content: `[Student has made ${newFailures} incorrect attempts. Suggest a specific pair like "Try [1/2] and [2/4]".]`,
-          });
+          batchSystemEvent(`[Student has made ${newFailures} incorrect attempts. Suggest a specific pair like "Try [1/2] and [2/4]".]`);
         }
       }
     },
-    [comparisonLeft, comparisonRight, streak, studentStats, checkBadges, consecutiveFailures, append, awardXP, currentMission, playerProgress.level]
+    [comparisonLeft, comparisonRight, streak, studentStats, checkBadges, consecutiveFailures, batchSystemEvent, awardXP, currentMission, missionSolved, playerProgress.level, difficulty]
   );
 
   const handleSmashAction = useCallback(() => {
@@ -608,7 +720,7 @@ export default function LessonPage() {
     setMatchHistory([]);
     setShowCompletion(false);
     setApiError(null);
-    setMessages([]);
+    stableSetMessages([]);
     setStreak(0);
     setConsecutiveFailures(0);
     setHighlightedFractions([]);
@@ -616,13 +728,41 @@ export default function LessonPage() {
     setStudentStats({ matches: 0, smashes: 0, merges: 0, streak: 0, uniquePairs: trophies.length });
     setMasteryLevel(0);
     clearSession();
+    restartContentRef.current = "[Student has restarted the lesson]";
     hasInitialized.current = false;
-    // Re-trigger initialization
-    setTimeout(() => {
-      hasInitialized.current = true;
-      append({ role: "user", content: "[Student has restarted the lesson]" });
-    }, 100);
-  }, [append, setMessages, trophies.length]);
+    setRestartKey((k) => k + 1);
+  }, [stableSetMessages, trophies.length]);
+
+  const handleNextEpisode = useCallback(() => {
+    const mastery = loadMastery();
+    const next = getNextEpisode(mastery);
+    // Clean up pending timers
+    if (gameEventTimer.current) clearTimeout(gameEventTimer.current);
+    if (systemEventTimer.current) clearTimeout(systemEventTimer.current);
+    if (highlightTimer.current) clearTimeout(highlightTimer.current);
+    gameEventQueue.current = null;
+    systemEventBuffer.current = [];
+    // Reset all session state
+    setLessonState(INITIAL_LESSON_STATE);
+    setComparisonLeft(null);
+    setComparisonRight(null);
+    setMatchHistory([]);
+    setShowCompletion(false);
+    setApiError(null);
+    stableSetMessages([]);
+    setStreak(0);
+    setConsecutiveFailures(0);
+    setHighlightedFractions([]);
+    setPhaseTransition(null);
+    setStudentStats({ matches: 0, smashes: 0, merges: 0, streak: 0, uniquePairs: trophies.length });
+    setMasteryLevel(0);
+    clearSession();
+    setSelectedEpisode(next);
+    setCurrentMission(generateChallengeWithReview(playerProgress.level, difficulty, Object.values(loadMastery().skills).filter(s => s.status === "mastered").map(s => s.skill)));
+    restartContentRef.current = `[Student started Episode ${next.id}: "${next.title}". Skills: ${next.skills.join(", ")}. Begin with the warmup!]`;
+    hasInitialized.current = false;
+    setRestartKey((k) => k + 1);
+  }, [stableSetMessages, trophies.length, playerProgress.level, difficulty]);
 
   // Quick replies — big tappable buttons, context-aware (mission + phase)
   const getQuickReplies = () => {
@@ -643,17 +783,17 @@ export default function LessonPage() {
     // Dora-style call-and-response quick replies
     switch (lessonState.phase) {
       case "intro":
-        return ["Vamonos!", "I'm ready!", "What are fractions?"];
+        return ["Let's GO!", "I'm ready!", "What are fractions?"];
       case "exploration":
-        return ["I did it!", "Show me!", "Help me!"];
+        return ["I did it!", "Show me how!", "Can you help?"];
       case "discovery":
-        return ["They're twins!", "Whoa cool!", "More!"];
+        return ["They're TWINS!", "Whoa cool!", "Find more!"];
       case "practice":
-        return ["Found one!", "Hint please!", "We did it!"];
+        return ["Found one!", "Give me a hint!", "WE DID IT!"];
       case "assessment":
-        return ["I found it!", "So close!", "Help!"];
+        return ["I found it!", "Almost there!", "Help me!"];
       case "celebration":
-        return ["WE DID IT!", "Again!", "That was awesome!"];
+        return ["WE DID IT!", "Again!", "That was AWESOME!"];
       default:
         return [];
     }
@@ -664,20 +804,45 @@ export default function LessonPage() {
     (m) => !m.content.startsWith("[Student") && !m.content.startsWith("[")
   );
 
+  // Episode selection gate — show episode picker before gameplay
+  if (!selectedEpisode) {
+    return (
+      <EpisodeSelect
+        onSelect={(ep) => {
+          setSelectedEpisode(ep);
+          // For early episodes, show teaching intro (chat only, no workspace)
+          if (ep.id <= 2) setTeachingIntro(true);
+        }}
+        onBack={() => router.push("/")}
+      />
+    );
+  }
+
   return (
     <div className="h-dvh flex flex-col bg-surface">
       {/* Top bar — Dora adventure style */}
-      <div className="flex items-center justify-between px-2.5 py-1 sm:py-1.5 bg-gradient-to-r from-sky-100/80 via-amber-50 to-emerald-50/80 border-b border-amber-200/60">
+      <div className="flex items-center justify-between px-2.5 py-1 sm:py-1.5 bg-gradient-to-r from-pink-100/80 via-purple-50 to-green-50/80 border-b border-pink-200/60">
         <div className="flex items-center gap-1.5">
           <a
             href="/"
-            className="text-sm text-amber-500 active:text-amber-700 px-1"
+            className="text-sm text-pink-500 active:text-pink-700 px-1"
           >
             ←
           </a>
           <button
+            onClick={() => setSelectedEpisode(null)}
+            className="px-2.5 py-1.5 bg-white/80 border border-purple-200 text-purple-700 text-[10px] font-bold rounded-full active:scale-95 transition-transform"
+          >
+            ← Episodes
+          </button>
+          {selectedEpisode && (
+            <span className="text-[10px] font-bold text-purple-600 hidden sm:inline">
+              {selectedEpisode.emoji} Ep {selectedEpisode.id}: {selectedEpisode.title}
+            </span>
+          )}
+          <button
             onClick={() => setShowMap(true)}
-            className="px-2.5 py-1.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black rounded-full shadow-sm active:scale-95 transition-transform"
+            className="px-2.5 py-1.5 bg-gradient-to-r from-pink-400 to-purple-500 text-white text-[10px] font-black rounded-full shadow-sm active:scale-95 transition-transform"
           >
             🗺️ MAP!
           </button>
@@ -702,96 +867,195 @@ export default function LessonPage() {
         </div>
       </div>
 
-      {/* Progress + XP + Mission — compact strip, collapses in landscape */}
-      <div className="landscape-thin flex items-center gap-2 px-3 py-0.5">
-        <div className="flex-1 min-w-0">
-          <ProgressTracker
-            currentStep={lessonState.step}
-            totalSteps={lessonState.totalSteps}
-            phase={lessonState.phase}
-          />
+      {/* Teaching intro — full-screen chat for early episodes before showing workspace */}
+      {teachingIntro ? (
+        <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+          <div className="flex-1 flex flex-col items-center justify-center p-4">
+            <div className="w-full max-w-lg flex flex-col flex-1 min-h-0">
+              <div className="text-center mb-3">
+                <span className="text-4xl">{selectedEpisode?.emoji || "🍕"}</span>
+                <h2 className="text-lg font-black text-purple-700 mt-1">
+                  {selectedEpisode?.title || "Let's Learn!"}
+                </h2>
+              </div>
+              <div className="flex-1 min-h-0">
+                <ChatPanel
+                  messages={visibleMessages}
+                  isLoading={isLoading}
+                  onSend={handleSend}
+                  quickReplies={[
+                    "I'm ready! Let's go!",
+                    "What's a fraction?",
+                    "Tell me more!",
+                  ]}
+                  isSpeaking={isSpeaking}
+                  characterId={voiceCharacter.id}
+                  characterName={voiceCharacter.name}
+                />
+              </div>
+              <button
+                onClick={() => setTeachingIntro(false)}
+                className="mt-3 mx-auto px-6 py-3 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-sm font-black rounded-full shadow-lg active:scale-95 transition-transform"
+              >
+                Skip to activity →
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="landscape-hide px-3 py-0.5">
-        <XPBar
-          xp={playerProgress.xp}
-          level={playerProgress.level}
-          dailyXP={playerProgress.dailyXP}
-          dailyGoal={playerProgress.dailyGoal}
-        />
-      </div>
+      ) : (
+        <>
+          {/* Journey strip — Dora-style adventure stops */}
+          <div className="landscape-thin flex items-center gap-2 px-3 py-0.5">
+            <div className="flex-1 min-w-0">
+              <JourneyStrip activeIndex={journeyIndex} />
+            </div>
+          </div>
+          <div className="landscape-hide px-3 py-0.5">
+            <XPBar
+              xp={playerProgress.xp}
+              level={playerProgress.level}
+              dailyXP={playerProgress.dailyXP}
+              dailyGoal={playerProgress.dailyGoal}
+            />
+          </div>
 
-      {/* Active mission — hidden in landscape to save space */}
-      <div className="px-3 py-0.5 landscape-hide">
-        <MissionCard
-          challenge={currentMission}
-          solved={missionSolved}
-          onSkip={() => {
-            setMissionSolved(false);
-            setCurrentMission(generateChallenge(playerProgress.level));
-          }}
-        />
-      </div>
+          {/* Active mission — hidden in landscape to save space */}
+          <div className="px-3 py-0.5 landscape-hide">
+            <MissionCard
+              challenge={currentMission}
+              solved={missionSolved}
+              onSkip={() => {
+                setMissionSolved(false);
+                setCurrentMission(generateChallengeWithReview(playerProgress.level, difficulty, Object.values(loadMastery().skills).filter(s => s.status === "mastered").map(s => s.skill)));
+              }}
+              onSolve={(challenge) => {
+                setMissionSolved(true);
+                awardXP(challenge.xpReward, "Mission complete!");
+                setTimeout(() => {
+                  setMissionSolved(false);
+                  setCurrentMission(generateChallengeWithReview(playerProgress.level, difficulty, Object.values(loadMastery().skills).filter(s => s.status === "mastered").map(s => s.skill)));
+                }, 2500);
+              }}
+            />
+          </div>
 
-      {/* API error banner */}
-      {apiError && (
-        <div className="mx-4 mt-2 px-4 py-3 bg-orange-50 border border-orange-200 rounded-xl text-sm text-orange-700 flex items-center justify-between">
-          <span>{apiError}</span>
-          <button
-            onClick={() => setApiError(null)}
-            className="ml-3 text-orange-500 hover:text-orange-700 font-bold"
-          >
-            ×
-          </button>
-        </div>
+          {/* API error banner */}
+          {apiError && (
+            <div className="mx-4 mt-2 px-4 py-3 bg-orange-50 border border-orange-200 rounded-xl text-sm text-orange-700 flex items-center justify-between">
+              <span>{apiError}</span>
+              <button
+                onClick={() => setApiError(null)}
+                className="ml-3 text-orange-500 hover:text-orange-700 font-bold"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {/* Main content — responsive split layout (side-by-side on iPad landscape, stacked otherwise) */}
+          <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+            {/* Chat panel — side panel on large screens, compact strip on phone/iPad portrait */}
+            <div className="min-h-0 lg:w-[30%] lg:min-w-[260px] lg:max-w-[340px] lg:border-r border-amber-100/60 flex flex-col max-h-[30vh] lg:max-h-none">
+              <ChatPanel
+                messages={visibleMessages}
+                isLoading={isLoading}
+                onSend={handleSend}
+                quickReplies={getQuickReplies()}
+                isSpeaking={isSpeaking}
+                characterId={voiceCharacter.id}
+                characterName={voiceCharacter.name}
+              />
+            </div>
+
+            {/* Workspace area */}
+            <div className="flex-1 min-h-0 flex flex-col">
+              {/* Toggle: Episode lessons vs Free Play */}
+              {selectedEpisode && (
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-purple-50/60 border-b border-purple-100">
+                  <button
+                    onClick={() => setEpisodeMode(true)}
+                    className={`px-3 py-1.5 text-[11px] font-bold rounded-full transition-all ${
+                      episodeMode
+                        ? "bg-purple-600 text-white shadow-sm"
+                        : "bg-white text-purple-500 border border-purple-200"
+                    }`}
+                  >
+                    📖 Lesson
+                  </button>
+                  <button
+                    onClick={() => setEpisodeMode(false)}
+                    className={`px-3 py-1.5 text-[11px] font-bold rounded-full transition-all ${
+                      !episodeMode
+                        ? "bg-purple-600 text-white shadow-sm"
+                        : "bg-white text-purple-500 border border-purple-200"
+                    }`}
+                  >
+                    🧩 Free Play
+                  </button>
+                </div>
+              )}
+
+              <div className="flex-1 min-h-0 p-1 sm:p-1.5 md:p-2">
+                {episodeMode && selectedEpisode ? (
+                  <EpisodePlayer
+                    episode={{
+                      id: selectedEpisode.id,
+                      title: selectedEpisode.title,
+                      emoji: selectedEpisode.emoji,
+                      warmup: selectedEpisode.warmup,
+                      missions: selectedEpisode.missions,
+                      boss: selectedEpisode.boss,
+                      exitTicket: selectedEpisode.exitTicket,
+                    }}
+                    onMissionComplete={(mission, correct, hintUsed) => {
+                      // Wire into mastery system — record for ALL episode skills
+                      const manip = mission.manipulative as "bar" | "circle" | "numberline" | "partition";
+                      for (const skill of selectedEpisode.skills) {
+                        recordAttempt(skill, correct, manip, hintUsed);
+                      }
+                    }}
+                    onEpisodeComplete={(xpEarned) => {
+                      awardXP(xpEarned, `${selectedEpisode.title} complete!`);
+                      completeEpisode(selectedEpisode.id);
+                      setTimeout(() => setShowCompletion(true), 1000);
+                    }}
+                    onTutorEvent={(event) => {
+                      batchSystemEvent(event);
+                    }}
+                  />
+                ) : (
+                  <FractionWorkspace
+                    comparisonLeft={comparisonLeft}
+                    comparisonRight={comparisonRight}
+                    onComparisonChange={handleComparisonChange}
+                    onMatch={handleMatch}
+                    onSmashAction={handleSmashAction}
+                    onMergeAction={handleMergeAction}
+                    masteryLevel={masteryLevel}
+                    unlockedModes={playerProgress.unlockedModes}
+                    highlightedFractions={highlightedFractions}
+                    suggestedMode={suggestedMode}
+                    onModeSwitched={() => setSuggestedMode(null)}
+                    playerLevel={playerProgress.level}
+                    onXP={(amount: number, label: string) => awardXP(amount, label)}
+                    onGameEvent={(event: string) => {
+                      gameEventQueue.current = event;
+                      if (gameEventTimer.current) clearTimeout(gameEventTimer.current);
+                      gameEventTimer.current = setTimeout(() => {
+                        const queued = gameEventQueue.current;
+                        if (queued && !isLoadingRef.current) {
+                          gameEventQueue.current = null;
+                          stableAppend({ role: "user", content: queued });
+                        }
+                      }, 1500);
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </>
       )}
-
-      {/* Main content — responsive split layout (side-by-side on iPad+) */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
-        {/* Chat panel — 30% width on tablet+, or stacked in portrait phone */}
-        <div className="min-h-0 md:w-[30%] md:min-w-[260px] md:max-w-[340px] md:border-r border-amber-100/60 flex flex-col max-h-[35vh] md:max-h-none">
-          <ChatPanel
-            messages={visibleMessages}
-            isLoading={isLoading}
-            onSend={handleSend}
-            quickReplies={getQuickReplies()}
-            isSpeaking={isSpeaking}
-            characterId={voiceCharacter.id}
-            characterName={voiceCharacter.name}
-          />
-        </div>
-
-        {/* Fraction workspace — takes majority of space on tablet, rest of space on phone */}
-        <div className="flex-1 min-h-0 p-1 sm:p-1.5 md:p-2">
-          <FractionWorkspace
-            comparisonLeft={comparisonLeft}
-            comparisonRight={comparisonRight}
-            onComparisonChange={handleComparisonChange}
-            onMatch={handleMatch}
-            onSmashAction={handleSmashAction}
-            onMergeAction={handleMergeAction}
-            highlightedFractions={highlightedFractions}
-            suggestedMode={suggestedMode}
-            onModeSwitched={() => setSuggestedMode(null)}
-            masteryLevel={masteryLevel}
-            unlockedModes={playerProgress.unlockedModes}
-            playerLevel={playerProgress.level}
-            onXP={awardXP}
-            onGameEvent={(event) => {
-              // Queue the event — latest wins, send only when AI is idle
-              gameEventQueue.current = event;
-              if (gameEventTimer.current) clearTimeout(gameEventTimer.current);
-              gameEventTimer.current = setTimeout(() => {
-                const queued = gameEventQueue.current;
-                if (queued && !isLoadingRef.current) {
-                  gameEventQueue.current = null;
-                  append({ role: "user", content: queued });
-                }
-              }, 1500);
-            }}
-          />
-        </div>
-      </div>
 
       {/* Celebration overlay */}
       <Celebration
@@ -803,6 +1067,25 @@ export default function LessonPage() {
       <SwiperFeedback
         show={showSwiper}
         onComplete={() => setShowSwiper(false)}
+      />
+
+      {/* Interactive Swiper challenge — chase Swiper away! */}
+      <SwiperChallenge
+        show={showSwiperChallenge}
+        timeLimit={difficulty === "beginner" ? 8 : difficulty === "expert" ? 3 : 5}
+        onSuccess={() => {
+          stableAppend({
+            role: "user",
+            content: "[Student chased Swiper away! Give them a helpful hint as a reward.]",
+          });
+        }}
+        onFail={() => {
+          stableAppend({
+            role: "user",
+            content: "[Swiper got away with a fraction! Encourage the student to keep trying.]",
+          });
+        }}
+        onComplete={() => setShowSwiperChallenge(false)}
       />
 
       {/* Adventure Map overlay */}
@@ -822,6 +1105,8 @@ export default function LessonPage() {
         earnedBadges={earnedBadges}
         onRestart={handleRestart}
         onHome={() => router.push("/")}
+        onNextEpisode={selectedEpisode && selectedEpisode.id < 18 ? handleNextEpisode : undefined}
+        episodeTitle={selectedEpisode?.title}
       />
 
       {/* Onboarding overlay */}

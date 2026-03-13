@@ -5,6 +5,7 @@ import type { FractionDrop } from "./FractionBattle";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import { playSlicePlaced, playOrderComplete, playError, playSlice } from "@/lib/sounds";
+import { fractionsEqualRaw } from "@/lib/fractions";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,9 +41,7 @@ type Phase = "slice" | "fill";
 
 // ── Fraction math ────────────────────────────────────────────────────────────
 
-function fractionsEqual(a: Fraction, b: Fraction): boolean {
-  return a.numerator * b.denominator === b.numerator * a.denominator;
-}
+const fractionsEqual = fractionsEqualRaw;
 
 function fractionLabel(f: Fraction): string {
   if (f.numerator === 0) return "0";

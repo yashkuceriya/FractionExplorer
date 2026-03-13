@@ -11,12 +11,13 @@ interface CelebrationProps {
 const CONFETTI_COLORS = ["#6366f1", "#ef4444", "#3b82f6", "#f59e0b", "#10b981", "#ec4899", "#8b5cf6", "#06b6d4", "#f97316"];
 
 const CELEBRATION_PHRASES = [
-  "WE DID IT! 🎉",
-  "YOU FOUND IT! ⭐",
-  "AMAZING! 🌟",
-  "EXCELLENT! 🤩",
-  "HIGH FIVE! ✋",
+  "WE DID IT! WE DID IT! 🎉",
+  "YOU FOUND IT! AMAZING! 🌟",
+  "INCREDIBLE! HIGH FIVE! 🤩",
+  "HIGH FIVE! YOU'RE A STAR! ✋",
+  "AWESOME! WHAT A MATCH! 🎆",
   "WOW WOW WOW! 🎊",
+  "YOU GOT IT! ⭐",
 ];
 
 function ConfettiPiece({ delay, color }: { delay: number; color: string }) {

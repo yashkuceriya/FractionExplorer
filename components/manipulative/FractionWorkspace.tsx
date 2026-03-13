@@ -33,18 +33,12 @@ import {
   getFractionColor,
   areFractionsEqual,
   getRandomFraction,
+  gcd,
+  lcm,
   type FractionData,
 } from "@/lib/fractions";
 import { playDrop, playSuccess, playSmash, playMerge, playError, playReset, playPickup } from "@/lib/sounds";
 import { MODE_UNLOCK_LEVELS, LEVEL_NAMES } from "@/lib/progress";
-
-// --- Cross-denominator merge math ---
-function gcd(a: number, b: number): number {
-  return b === 0 ? a : gcd(b, a % b);
-}
-function lcm(a: number, b: number): number {
-  return (a * b) / gcd(a, b);
-}
 
 /** Check if two fractions can merge. Returns the result fraction or null. */
 function canMergeFractions(
@@ -112,6 +106,8 @@ interface LiveBlock {
   smashOrigin?: string;
   fresh?: boolean;
   merged?: boolean; // true for blocks created by merging (distinct animation)
+  // Track what was merged to create this block, so split can reverse it
+  mergeParents?: { numerator: number; denominator: number }[];
 }
 
 let blockIdCounter = 0;
@@ -299,24 +295,42 @@ export default function FractionWorkspace({
   const blocksRef = useRef(blocks);
   blocksRef.current = blocks;
 
-  // Smash: replace block in-place with its unit fraction children
+  // Smash/Split: if block was merged, split back into original pieces; otherwise into unit fractions
   const handleSmash = useCallback((blockId: string) => {
     const current = blocksRef.current.find((b) => b.id === blockId);
     if (!current || current.numerator === 1) return;
 
     playSmash();
 
-    const children: LiveBlock[] = Array.from(
-      { length: current.numerator },
-      () => ({
+    let children: LiveBlock[];
+    let labelText: string;
+
+    if (current.mergeParents && current.mergeParents.length > 0) {
+      // Reverse the merge — give back the original fractions
+      children = current.mergeParents.map((p) => ({
         id: nextBlockId(),
-        numerator: 1,
-        denominator: current.denominator,
-        color: getFractionColor(1, current.denominator),
+        numerator: p.numerator,
+        denominator: p.denominator,
+        color: getFractionColor(p.numerator, p.denominator),
         smashOrigin: `${current.numerator}/${current.denominator}`,
         fresh: true,
-      })
-    );
+      }));
+      labelText = `${current.numerator}/${current.denominator} = ${children.map((c) => `${c.numerator}/${c.denominator}`).join(" + ")}`;
+    } else {
+      // Default: split into unit fractions
+      children = Array.from(
+        { length: current.numerator },
+        () => ({
+          id: nextBlockId(),
+          numerator: 1,
+          denominator: current.denominator,
+          color: getFractionColor(1, current.denominator),
+          smashOrigin: `${current.numerator}/${current.denominator}`,
+          fresh: true,
+        })
+      );
+      labelText = `${current.numerator}/${current.denominator} = ${children.map(() => `1/${current.denominator}`).join(" + ")}`;
+    }
 
     const childIds = children.map((c) => c.id);
 
@@ -328,11 +342,7 @@ export default function FractionWorkspace({
       return next;
     });
 
-    showLabel(
-      `${current.numerator}/${current.denominator} = ${children.map(() => `1/${current.denominator}`).join(" + ")}`,
-      childIds,
-      "smash"
-    );
+    showLabel(labelText, childIds, "smash");
     onSmashAction?.();
   }, [showLabel, onSmashAction]);
 
@@ -357,6 +367,11 @@ export default function FractionWorkspace({
       color: getFractionColor(result.numerator, result.denominator),
       fresh: true,
       merged: true,
+      // Remember what was merged so split can reverse it
+      mergeParents: [
+        { numerator: source.numerator, denominator: source.denominator },
+        { numerator: target.numerator, denominator: target.denominator },
+      ],
     };
 
     setBlocks((prev) => {
@@ -563,7 +578,8 @@ export default function FractionWorkspace({
       onDragEnd={handleDragEnd}
     >
       <div
-        className="h-full flex flex-col bg-white rounded-2xl shadow-sm border-2 border-amber-100/80 overflow-hidden relative"
+        className="h-full flex flex-col bg-white rounded-2xl shadow-sm border-2 border-amber-100/80 overflow-hidden relative fraction-workspace"
+        data-no-select
       >
 
         {/* Header — adventure-themed */}
@@ -790,30 +806,36 @@ export default function FractionWorkspace({
 
         {/* Challenge Zone — the adventure area */}
         <div className="bg-gradient-to-t from-amber-100/60 via-amber-50/40 to-white border-t-2 border-amber-200/60">
-          {/* Challenge mode tabs — evenly distributed, touch-friendly (min 44px) */}
-          {/* Only show unlocked modes — no grayed-out locks */}
+          {/* Challenge mode tabs — show all, locked ones are grayed with lock icon */}
           <div className="flex gap-1.5 px-2 sm:px-3 pt-1.5 pb-1 overflow-x-auto scrollbar-hide landscape-compact">
-            {CHALLENGE_TABS.filter((tab) => unlockedModes.includes(tab.mode)).map((tab) => (
+            {CHALLENGE_TABS.map((tab) => {
+              const isUnlocked = unlockedModes.includes(tab.mode);
+              const unlockLevel = MODE_UNLOCK_LEVELS[tab.mode] ?? 0;
+              return (
               <button
                 key={tab.mode}
                 onClick={() => {
+                  if (!isUnlocked) return;
                   const prev = challengeMode;
                   setChallengeMode(tab.mode);
-                  // Only notify AI on actual mode change
                   if (tab.mode !== prev) {
-                    onGameEvent?.(`[Student switched to ${tab.label} (${tab.emoji}) mode. Be excited and give a quick tip for this mode!]`);
+                    onGameEvent?.(`[Student switched to ${tab.label} (${tab.emoji}) mode. Give a casual tip for this mode.]`);
                   }
                 }}
-                className={`text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 min-h-[40px] rounded-2xl font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 ${
-                  challengeMode === tab.mode
+                className={`text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 min-h-[44px] rounded-2xl font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 ${
+                  !isUnlocked
+                    ? "bg-gray-100 text-gray-300 border border-gray-200 cursor-default opacity-60"
+                    : challengeMode === tab.mode
                     ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
                     : "bg-white text-gray-500 border border-gray-200 active:bg-amber-50"
                 }`}
+                title={!isUnlocked ? `Unlocks at ${LEVEL_NAMES[unlockLevel] || `Level ${unlockLevel}`}` : tab.label}
               >
-                <span className="text-base">{tab.emoji}</span>
+                <span className="text-base">{isUnlocked ? tab.emoji : "🔒"}</span>
                 <span className="hidden sm:inline">{tab.label}</span>
               </button>
-            ))}
+              );
+            })}
           </div>
 
           <div className="p-2 sm:p-3 pt-2 min-h-[140px] landscape-shorter">
@@ -825,6 +847,13 @@ export default function FractionWorkspace({
                     side="left"
                     fraction={comparisonLeft}
                     onClear={() => onComparisonChange(null, comparisonRight)}
+                    onTapPlace={selectedBlockId ? () => {
+                      const block = blocks.find(b => b.id === selectedBlockId);
+                      if (block) {
+                        onComparisonChange({ numerator: block.numerator, denominator: block.denominator, color: block.color }, comparisonRight);
+                        setSelectedBlockId(null);
+                      }
+                    } : undefined}
                   />
                   <motion.div
                     animate={
@@ -841,6 +870,13 @@ export default function FractionWorkspace({
                     side="right"
                     fraction={comparisonRight}
                     onClear={() => onComparisonChange(comparisonLeft, null)}
+                    onTapPlace={selectedBlockId ? () => {
+                      const block = blocks.find(b => b.id === selectedBlockId);
+                      if (block) {
+                        onComparisonChange(comparisonLeft, { numerator: block.numerator, denominator: block.denominator, color: block.color });
+                        setSelectedBlockId(null);
+                      }
+                    } : undefined}
                   />
                 </div>
 

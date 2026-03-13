@@ -176,3 +176,36 @@ export function simplifyFraction(numerator: number, denominator: number): { nume
   const f = new Fraction(numerator, denominator);
   return { numerator: Number(f.n), denominator: Number(f.d) };
 }
+
+// Shared math helpers — use these instead of duplicating in components
+export function gcd(a: number, b: number): number {
+  a = Math.abs(a);
+  b = Math.abs(b);
+  while (b) { [a, b] = [b, a % b]; }
+  return a;
+}
+
+export function lcm(a: number, b: number): number {
+  return (a * b) / gcd(a, b);
+}
+
+export function simplifyPair(n: number, d: number): { numerator: number; denominator: number } {
+  const g = gcd(n, d);
+  return { numerator: n / g, denominator: d / g };
+}
+
+export function fractionsEqualRaw(
+  a: { numerator: number; denominator: number },
+  b: { numerator: number; denominator: number }
+): boolean {
+  return a.numerator * b.denominator === b.numerator * a.denominator;
+}
+
+export function addFractions(
+  a: { numerator: number; denominator: number },
+  b: { numerator: number; denominator: number }
+): { numerator: number; denominator: number } {
+  const d = lcm(a.denominator, b.denominator);
+  const n = a.numerator * (d / a.denominator) + b.numerator * (d / b.denominator);
+  return simplifyPair(n, d);
+}

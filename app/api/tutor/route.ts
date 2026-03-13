@@ -25,8 +25,59 @@ function getModelAndName() {
   return null;
 }
 
+// Allow longer streaming responses
+export const maxDuration = 30;
+
 export async function POST(req: Request) {
-  const { messages, workspaceState } = await req.json();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let messages: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let workspaceState: any;
+  try {
+    const body = await req.json();
+    messages = body.messages;
+    workspaceState = body.workspaceState;
+  } catch {
+    return new Response(
+      JSON.stringify({ error: "Invalid request body" }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  // Validate messages is an array with at least one entry
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return new Response(
+      JSON.stringify({ error: "messages must be a non-empty array" }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  // Sanitize: strip any system-role messages injected by client
+  messages = messages.filter((m: any) => m.role !== "system");
+
+  // Truncate excessively long user messages to prevent prompt abuse
+  const MAX_USER_MSG_LENGTH = 500;
+  messages = messages.map((m: any) =>
+    m.role === "user" && typeof m.content === "string" && m.content.length > MAX_USER_MSG_LENGTH
+      ? { ...m, content: m.content.slice(0, MAX_USER_MSG_LENGTH) }
+      : m
+  );
+
+  // Rate limit: reject if last user message looks like prompt injection
+  const lastUserMsg = messages.filter((m: any) => m.role === "user").pop();
+  if (lastUserMsg && typeof lastUserMsg.content === "string") {
+    const lc = lastUserMsg.content.toLowerCase();
+    // Block prompt injection attempts
+    const injectionPatterns = [
+      "ignore previous", "ignore all", "disregard", "forget your instructions",
+      "you are now", "new instructions", "system prompt", "override",
+      "pretend you", "act as", "roleplay as", "jailbreak",
+    ];
+    if (injectionPatterns.some(p => lc.includes(p)) && !lc.startsWith("[")) {
+      // Replace with a safe redirect — don't block, just neuter the attempt
+      lastUserMsg.content = "[Student sent an off-topic message. Gently redirect to fractions.]";
+    }
+  }
 
   const ws = workspaceState || {
     comparisonLeft: null,
@@ -41,14 +92,14 @@ export async function POST(req: Request) {
   const contextMessage = buildContextMessage(ws);
   const systemPrompt = `${TUTOR_SYSTEM_PROMPT}\n\n## Current Workspace State\n${contextMessage}`;
 
-  const result_or_null = getModelAndName();
-  if (!result_or_null) {
+  const modelResult = getModelAndName();
+  if (!modelResult) {
     return new Response(
       JSON.stringify({ error: "No API key configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in .env.local" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-  const { model, name: modelName } = result_or_null;
+  const { model, name: modelName } = modelResult;
 
   // Trim conversation history to avoid unbounded context growth
   const trimmedMessages = trimMessages(messages);
@@ -83,7 +134,7 @@ export async function POST(req: Request) {
     system: systemPrompt,
     messages: trimmedMessages,
     temperature: 0.85,
-    maxTokens: 250,
+    maxTokens: 300,
     onFinish: async ({ text, usage }) => {
       // Track token usage
       const promptTokens = usage?.promptTokens || 0;

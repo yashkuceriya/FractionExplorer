@@ -99,6 +99,8 @@ export default function VoiceNarrator({
   const cachedVoice = useRef<SpeechSynthesisVoice | null>(null);
   const lastCharacterId = useRef<string | null>(null);
   const cancelledRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const elevenLabsAvailable = useRef<boolean | null>(null); // null = unknown, true/false = tested
 
   const updateSpeaking = useCallback(
     (speaking: boolean) => {
@@ -157,47 +159,80 @@ export default function VoiceNarrator({
 
   const stopSpeaking = useCallback(() => {
     cancelledRef.current = true;
+    // Stop ElevenLabs audio if playing
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current = null;
+    }
+    // Stop Web Speech API
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
     updateSpeaking(false);
   }, [updateSpeaking]);
 
-  const speak = useCallback(
-    (message: string) => {
-      if (!enabled || !message || message === lastSpokenRef.current) return;
-      if (typeof window === "undefined" || !window.speechSynthesis) return;
+  /** Try ElevenLabs TTS, returns true if it handled playback */
+  const tryElevenLabs = useCallback(
+    async (cleanMessage: string): Promise<boolean> => {
+      const voiceId = character?.elevenLabsVoiceId;
+      if (!voiceId) return false;
+      // Skip if we already know ElevenLabs is unavailable
+      if (elevenLabsAvailable.current === false) return false;
+      // Cost guard: skip long texts (>300 chars) to save ElevenLabs credits
+      if (cleanMessage.length > 300) return false;
 
-      cancelledRef.current = false;
-      window.speechSynthesis.cancel();
-      lastSpokenRef.current = message;
+      try {
+        const res = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: cleanMessage, voiceId }),
+        });
 
-      const cleanMessage = cleanForSpeech(message);
-      if (!cleanMessage) return;
+        if (res.status === 501) {
+          // No ElevenLabs key configured — remember and skip in future
+          elevenLabsAvailable.current = false;
+          return false;
+        }
 
-      // Show subtitle with the original (readable) text
-      const readableText = message
-        .replace(/\[(\d+\/\d+)\]/g, "$1")
-        .replace(/\[ADVANCE_PHASE\]/g, "")
-        .replace(/\[SWITCH_MODE:\w+\]/g, "")
-        .trim();
-      setSubtitleText(readableText);
-      setSubtitleVisible(true);
+        if (!res.ok) return false;
 
-      // Play character intro sound
-      if (character?.id) {
-        playCharacterIntro(character.id);
+        elevenLabsAvailable.current = true;
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audioRef.current = audio;
+
+        audio.onplay = () => updateSpeaking(true);
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+          audioRef.current = null;
+          updateSpeaking(false);
+        };
+        audio.onerror = () => {
+          URL.revokeObjectURL(url);
+          audioRef.current = null;
+          updateSpeaking(false);
+        };
+
+        await audio.play();
+        return true;
+      } catch {
+        return false;
       }
+    },
+    [character?.elevenLabsVoiceId, updateSpeaking]
+  );
 
-      // Split into chunks for more natural pacing
+  /** Fall back to Web Speech API */
+  const speakWebSpeech = useCallback(
+    (cleanMessage: string) => {
       const chunks = splitSentences(cleanMessage);
       const voice = findVoice();
 
       updateSpeaking(true);
-
       let chunkIndex = 0;
-
-      // iOS Safari bug: speechSynthesis pauses after ~15s. Workaround: resume periodically.
       let keepAlive: ReturnType<typeof setInterval> | null = null;
 
       function speakNext() {
@@ -211,7 +246,6 @@ export default function VoiceNarrator({
         utterance.rate = character?.rate ?? 0.8;
         utterance.pitch = character?.pitch ?? 1.1;
         utterance.volume = 0.9;
-
         if (voice) utterance.voice = voice;
 
         utterance.onend = () => {
@@ -235,7 +269,6 @@ export default function VoiceNarrator({
 
         window.speechSynthesis.speak(utterance);
 
-        // Start keepalive on first chunk
         if (!keepAlive) {
           keepAlive = setInterval(() => {
             if (window.speechSynthesis.speaking) {
@@ -248,7 +281,52 @@ export default function VoiceNarrator({
 
       speakNext();
     },
-    [enabled, updateSpeaking, character, findVoice]
+    [updateSpeaking, character, findVoice]
+  );
+
+  const speak = useCallback(
+    async (message: string) => {
+      if (!enabled || !message) return;
+      if (typeof window === "undefined") return;
+
+      // Always stop any in-progress speech first (prevents overlap)
+      stopSpeaking();
+
+      // Skip if identical to last spoken message
+      if (message === lastSpokenRef.current) return;
+
+      // Small delay to let audio system settle after stop
+      await new Promise((r) => setTimeout(r, 80));
+
+      cancelledRef.current = false;
+      lastSpokenRef.current = message;
+
+      const cleanMessage = cleanForSpeech(message);
+      if (!cleanMessage) return;
+
+      // Show subtitle
+      const readableText = message
+        .replace(/\[(\d+\/\d+)\]/g, "$1")
+        .replace(/\[ADVANCE_PHASE\]/g, "")
+        .replace(/\[SWITCH_MODE:\w+\]/g, "")
+        .trim();
+      setSubtitleText(readableText);
+      setSubtitleVisible(true);
+
+      // Play character intro sound
+      if (character?.id) {
+        playCharacterIntro(character.id);
+      }
+
+      // Try ElevenLabs first, fall back to Web Speech API
+      const handled = await tryElevenLabs(cleanMessage);
+      if (!handled && !cancelledRef.current) {
+        if (window.speechSynthesis) {
+          speakWebSpeech(cleanMessage);
+        }
+      }
+    },
+    [enabled, updateSpeaking, character, tryElevenLabs, speakWebSpeech, stopSpeaking]
   );
 
   useEffect(() => {
@@ -270,14 +348,19 @@ export default function VoiceNarrator({
     };
 
     // iOS Safari requires a user-gesture-triggered utterance to unlock TTS.
-    // We attach a one-shot handler that speaks an empty utterance on first touch/click.
+    // Also unlock HTMLAudioElement for ElevenLabs playback.
     let unlocked = false;
     function unlockTTS() {
       if (unlocked) return;
       unlocked = true;
+      // Unlock Web Speech API
       const warmup = new SpeechSynthesisUtterance("");
       warmup.volume = 0;
       window.speechSynthesis.speak(warmup);
+      // Unlock HTMLAudioElement for ElevenLabs
+      const silentAudio = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwmHAAAAAAD/+1DEAAAGAANIAAAAACIANICAAAATEEAAEAQBAH/EARC4IA+D4f+sEAQBAEAQBgGP/BB3/8QBDv/+UdxYGf//6gTB8HwfD/lHcWBn////+D4f///KO4sDYPg+D4AAAAAA//tQxBOAAADSAAAAAAAAANIAAAAASZEJJJNBBAATT0RSSU0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==");
+      silentAudio.volume = 0;
+      silentAudio.play().catch(() => {});
       document.removeEventListener("touchstart", unlockTTS);
       document.removeEventListener("click", unlockTTS);
     }
@@ -307,7 +390,7 @@ export default function VoiceNarrator({
             onToggle();
           }
         }}
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+        className={`flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] min-w-[44px] rounded-xl text-xs font-semibold transition-all ${
           enabled
             ? "bg-tutor/15 text-tutor border border-tutor/20"
             : "bg-gray-100 text-gray-400 border border-gray-200"
@@ -332,17 +415,18 @@ export default function VoiceNarrator({
         </span>
       </motion.button>
 
-      {/* Subtitle overlay — shows text being spoken */}
+      {/* Subtitle — persistent bottom bar, full text with wrapping */}
       <AnimatePresence>
         {subtitleVisible && subtitleText && enabled && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 5 }}
-            transition={{ duration: 0.3 }}
-            className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 max-w-[90vw] sm:max-w-md pointer-events-none"
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-2 left-1/2 -translate-x-1/2 z-40 max-w-[90vw] sm:max-w-md"
+            onClick={() => setSubtitleVisible(false)}
           >
-            <div className="bg-black/75 backdrop-blur-md text-white text-sm font-medium px-5 py-3 rounded-2xl shadow-xl text-center leading-relaxed">
+            <div className="bg-black/70 backdrop-blur-sm text-white text-sm font-medium px-4 py-2 rounded-2xl shadow-lg text-center leading-snug">
               {subtitleText}
             </div>
           </motion.div>

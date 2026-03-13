@@ -1,6 +1,7 @@
 import { simplifyFraction } from "./fractions";
+import { scopedKey } from "./active-student-id";
 
-const STORAGE_KEY = "trophy-wall";
+const BASE_KEY = "trophy-wall";
 
 export interface Trophy {
   left: string;  // e.g. "1/2"
@@ -21,7 +22,7 @@ function toKey(left: string, right: string): string {
 
 export function loadTrophies(): Trophy[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(scopedKey(BASE_KEY));
     if (!raw) return [];
     return JSON.parse(raw);
   } catch {
@@ -35,7 +36,7 @@ export function saveTrophy(left: string, right: string): Trophy[] {
   if (trophies.some((t) => t.simplified === key)) return trophies;
   const updated = [...trophies, { left, right, simplified: key }];
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    localStorage.setItem(scopedKey(BASE_KEY), JSON.stringify(updated));
   } catch {
     // ignore
   }

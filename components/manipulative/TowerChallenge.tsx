@@ -5,14 +5,11 @@ import type { FractionDrop } from "./FractionBattle";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import { playFloorComplete, playError as playReject } from "@/lib/sounds";
+import { gcd } from "@/lib/fractions";
 
 /* ------------------------------------------------------------------ */
-/*  Fraction math helpers                                              */
+/*  Fraction math helpers (using shared gcd)                           */
 /* ------------------------------------------------------------------ */
-
-function gcd(a: number, b: number): number {
-  return b === 0 ? a : gcd(b, a % b);
-}
 
 function simplify(n: number, d: number): [number, number] {
   const g = gcd(Math.abs(n), Math.abs(d));
@@ -227,9 +224,9 @@ export default function TowerChallenge({ onComplete, pendingDrop, onXP }: TowerC
                             ],
                           }
                         : {
-                            y: [null, -4, 3, -1, 0],
-                            scaleY: [null, 0.85, 1.08, 0.97, 1],
-                            scaleX: [null, 1.12, 0.94, 1.02, 1],
+                            y: [0, -4, 3, -1, 0],
+                            scaleY: [1, 0.85, 1.08, 0.97, 1],
+                            scaleX: [1, 1.12, 0.94, 1.02, 1],
                             opacity: 1,
                           }
                     }

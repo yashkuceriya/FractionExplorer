@@ -1,14 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { StudentProvider } from "@/lib/student-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Fraction Explorer — AI Math Tutor",
+  title: "DorFrac — Fraction Adventure",
   description: "Learn about fraction equivalence with an AI-powered math tutor",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "Fractions",
+    title: "DorFrac",
     statusBarStyle: "black-translucent",
   },
 };
@@ -16,8 +17,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
 };
 
@@ -29,7 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-surface min-h-dvh antialiased">
-        <ErrorBoundary>{children}</ErrorBoundary>
+        <StudentProvider>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </StudentProvider>
       </body>
     </html>
   );
