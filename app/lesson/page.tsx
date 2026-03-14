@@ -870,15 +870,15 @@ export default function LessonPage() {
       {/* Teaching intro — full-screen chat for early episodes before showing workspace */}
       {teachingIntro ? (
         <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-          <div className="flex-1 flex flex-col items-center justify-center p-4">
-            <div className="w-full max-w-lg flex flex-col flex-1 min-h-0">
-              <div className="text-center mb-3">
-                <span className="text-4xl">{selectedEpisode?.emoji || "🍕"}</span>
-                <h2 className="text-lg font-black text-purple-700 mt-1">
+          <div className="flex-1 flex flex-col items-center p-2 sm:p-4 min-h-0">
+            <div className="w-full max-w-lg flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="text-center py-1 sm:py-2 shrink-0 landscape-compact">
+                <span className="text-2xl sm:text-4xl">{selectedEpisode?.emoji || "🍕"}</span>
+                <h2 className="text-sm sm:text-lg font-black text-purple-700">
                   {selectedEpisode?.title || "Let's Learn!"}
                 </h2>
               </div>
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-0 overflow-hidden">
                 <ChatPanel
                   messages={visibleMessages}
                   isLoading={isLoading}
@@ -896,7 +896,7 @@ export default function LessonPage() {
               </div>
               <button
                 onClick={() => setTeachingIntro(false)}
-                className="mt-3 mx-auto px-6 py-3 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-sm font-black rounded-full shadow-lg active:scale-95 transition-transform"
+                className="mt-1 sm:mt-3 mx-auto px-6 py-2.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-sm font-black rounded-full shadow-lg active:scale-95 transition-transform shrink-0"
               >
                 Skip to activity →
               </button>
@@ -956,7 +956,7 @@ export default function LessonPage() {
           {/* Main content — responsive split layout (side-by-side on iPad landscape, stacked otherwise) */}
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
             {/* Chat panel — side panel on large screens, compact strip on phone/iPad portrait */}
-            <div className="min-h-0 md:w-[30%] md:min-w-[260px] md:max-w-[340px] md:border-r border-amber-100/60 flex flex-col max-h-[30vh] md:max-h-none">
+            <div className="min-h-0 md:w-[30%] md:min-w-[260px] md:max-w-[340px] md:border-r border-amber-100/60 flex flex-col max-h-[30vh] md:max-h-none overflow-hidden">
               <ChatPanel
                 messages={visibleMessages}
                 isLoading={isLoading}
