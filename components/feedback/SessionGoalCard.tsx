@@ -70,7 +70,7 @@ export default function SessionGoalCard({
 
         {/* Frax encouragement */}
         <p className="text-sm text-gray-600 mb-6 italic">
-          &ldquo;You&apos;re a fraction superstar! Come back tomorrow for more adventures!&rdquo;
+          &ldquo;You&apos;re a fraction superstar! Come back tomorrow for more!&rdquo;
         </p>
 
         {/* Buttons */}

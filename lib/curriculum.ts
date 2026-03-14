@@ -1,4 +1,4 @@
-// ─── DorFrac 18-Episode Curriculum ───────────────────────────────────
+// ─── FractionLab Curriculum ──────────────────────────────────────────
 // Common Core aligned for ages 7-10 (grades 2-4)
 // Each episode: warmup → 3-4 missions → boss → exit ticket
 
@@ -105,19 +105,15 @@ export const CURRICULUM: Episode[] = [
         ],
       },
       {
-        type: "identify",
-        manipulative: "bar",
-        prompt: "Which bar was shared FAIRLY? (Every piece is the same size!)",
+        type: "shade-fraction",
+        manipulative: "circle",
+        prompt: "Awesome pizza! Now tap YOUR slice — you get 1 out of 4!",
         fraction: { n: 1, d: 4 },
-        choices: [
-          { n: 1, d: 4 },
-          { n: 1, d: 3 },
-        ],
         xpReward: 10,
-        hintAfterWrong: 1,
+        hintAfterWrong: 2,
         hints: [
-          "Fair sharing means every piece is the SAME size.",
-          "Look — are all pieces the same width?",
+          "You get 1 slice! Tap just ONE piece to color it.",
+          "1 out of 4 slices is yours — tap any single slice!",
         ],
       },
     ],
@@ -134,17 +130,13 @@ export const CURRICULUM: Episode[] = [
       ],
     },
     exitTicket: {
-      type: "identify",
+      type: "shade-fraction",
       manipulative: "bar",
-      prompt: "Which snack was shared fairly? (All pieces the same size!)",
+      prompt: "Last one! This bar has 3 pieces. Color 1 piece — that's 1 out of 3!",
       fraction: { n: 1, d: 3 },
-      choices: [
-        { n: 1, d: 3 },
-        { n: 1, d: 2 },
-      ],
       xpReward: 10,
       hintAfterWrong: 1,
-      hints: ["Fair sharing = same size pieces!"],
+      hints: ["Tap just ONE piece to color it. 1 out of 3!"],
     },
   },
 

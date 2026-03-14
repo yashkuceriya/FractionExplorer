@@ -1,4 +1,4 @@
-// ─── DorFrac Mastery-Based Progression ──────────────────────────────
+// ─── FractionLab Mastery Progression ────────────────────────────────
 // Replaces pure XP with skill mastery tracking across representations.
 
 import type { ManipulativeType, SkillTag, Episode } from "./curriculum";
@@ -54,7 +54,7 @@ export interface MasteryReport {
 
 import { scopedKey } from "./active-student-id";
 
-const BASE_KEY = "dorfrac-mastery";
+const BASE_KEY = "fractionlab-mastery";
 const MAX_LAST_ATTEMPTS = 10;
 const MASTERY_CORRECT_THRESHOLD = 4; // out of 5
 const MASTERY_WINDOW = 5;

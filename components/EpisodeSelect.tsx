@@ -41,9 +41,9 @@ export default function EpisodeSelect({ onSelect, onBack }: EpisodeSelectProps) 
         className="text-center mb-6"
       >
         <h1 className="text-3xl font-extrabold bg-gradient-to-r from-[#F13EA1] to-[#844CA4] bg-clip-text text-transparent">
-          Choose Your Adventure!
+          Choose Your Lesson!
         </h1>
-        <p className="text-sm text-gray-500 mt-1">DorFrac Fraction Quest</p>
+        <p className="text-sm text-gray-500 mt-1">FractionLab Lessons</p>
       </motion.div>
 
       {/* Progress bar */}

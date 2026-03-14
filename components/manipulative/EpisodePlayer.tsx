@@ -139,8 +139,17 @@ export default function EpisodePlayer({
     }
   }, [phase, missionIndex, episode, resetInteraction, onEpisodeComplete, totalXP]);
 
+  const [noSelectionNudge, setNoSelectionNudge] = useState(false);
+
   const checkAnswer = useCallback(() => {
     if (!currentMission) return;
+
+    // For choice-based missions, require a selection first
+    if (currentMission.choices && currentMission.choices.length > 0 && selectedChoice === null) {
+      setNoSelectionNudge(true);
+      setTimeout(() => setNoSelectionNudge(false), 1500);
+      return;
+    }
 
     let correct = false;
     const hintUsed = hintIndex > 0;
@@ -364,6 +373,22 @@ export default function EpisodePlayer({
         )}
       </AnimatePresence>
 
+      {/* Nudge: select a choice first */}
+      <AnimatePresence>
+        {noSelectionNudge && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="px-3 pb-2"
+          >
+            <p className="text-xs font-black text-pink-500 text-center animate-pulse">
+              👆 Tap one of the choices first!
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Action buttons */}
       <div className="px-3 pb-3 flex gap-2">
         <button
@@ -452,6 +477,48 @@ function renderManipulative(
     );
   }
 
+  // Choice-based missions (identify, compare, etc.) — render choice grid regardless of manipulative type
+  if (mission.choices && mission.choices.length > 0) {
+    const isCircle = mission.manipulative === "circle";
+    return (
+      <div className={`grid ${mission.choices.length > 2 ? "grid-cols-3" : "grid-cols-2"} gap-4 w-full max-w-md`}>
+        {mission.choices.map((choice, i) => (
+          <motion.button
+            key={i}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setSelectedChoice(selectedChoice === i ? null : i)}
+            className={`p-4 rounded-2xl border-3 transition-all flex flex-col items-center gap-3 min-h-[100px] ${
+              selectedChoice === i
+                ? "border-pink-500 bg-pink-50 shadow-lg scale-105"
+                : "border-gray-200 bg-white shadow-sm"
+            }`}
+          >
+            {isCircle ? (
+              <FractionCircle
+                denominator={choice.d}
+                shadedSegments={Array.from({ length: choice.d }, (_, j) => j < choice.n)}
+                onToggleSegment={() => {}}
+                size={80}
+                showLabel={false}
+              />
+            ) : (
+              <FractionBar
+                numerator={choice.n}
+                denominator={choice.d}
+                color={selectedChoice === i ? "#F13EA1" : "#a78bfa"}
+                width={110}
+                height={28}
+              />
+            )}
+            <span className="text-xs font-black text-purple-600">
+              {choice.d} pieces
+            </span>
+          </motion.button>
+        ))}
+      </div>
+    );
+  }
+
   switch (mission.manipulative) {
     case "circle":
       return (
@@ -496,38 +563,7 @@ function renderManipulative(
 
     case "bar":
     default:
-      if (mission.choices && mission.choices.length > 0) {
-        // Multiple choice with fraction bars
-        return (
-          <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
-            {mission.choices.map((choice, i) => (
-              <motion.button
-                key={i}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setSelectedChoice(i)}
-                className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                  selectedChoice === i
-                    ? "border-pink-500 bg-pink-50 shadow-md"
-                    : "border-gray-200 bg-white"
-                }`}
-              >
-                <FractionBar
-                  numerator={choice.n}
-                  denominator={choice.d}
-                  color="#F13EA1"
-                  width={100}
-                  height={24}
-                />
-                <span className="text-sm font-black text-purple-800">
-                  {choice.n}/{choice.d}
-                </span>
-              </motion.button>
-            ))}
-          </div>
-        );
-      }
-
-      // Default: single fraction bar display (for identify, compare, etc.)
+      // Default: single fraction bar display
       return (
         <div className="flex flex-col items-center gap-3">
           <FractionBar

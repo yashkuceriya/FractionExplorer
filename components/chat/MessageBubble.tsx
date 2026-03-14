@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import TutorAvatar from "./TutorAvatar";
 
 interface MessageBubbleProps {
@@ -36,21 +37,36 @@ export default function MessageBubble({ role, content, characterId }: MessageBub
   const isAssistant = role === "assistant";
 
   return (
-    <div className={`flex ${isAssistant ? "justify-start" : "justify-end"} mb-2.5`}>
+    <div className={`flex ${isAssistant ? "justify-start" : "justify-end"} mb-4`}>
       {isAssistant && (
-        <div className="shrink-0 mr-1.5 mt-1">
-          <TutorAvatar size={26} characterId={characterId} animate={false} />
-        </div>
+        <motion.div 
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="shrink-0 mr-2 mt-auto"
+        >
+          <TutorAvatar size={32} characterId={characterId} animate={false} />
+        </motion.div>
       )}
-      <div
-        className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        className={`max-w-[85%] px-4 py-3 rounded-3xl text-sm leading-relaxed shadow-sm relative ${
           isAssistant
-            ? "bg-white text-gray-800 shadow-sm border-2 border-amber-100/80 rounded-tl-md"
-            : "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-tr-md shadow-sm"
+            ? "bg-white text-gray-800 border-2 border-amber-100/80 rounded-bl-none"
+            : "bg-gradient-to-br from-emerald-400 to-teal-600 text-white rounded-br-none shadow-md"
         }`}
       >
-        {renderContent(content, isAssistant)}
-      </div>
+        {/* Little tail for the speech bubble */}
+        {isAssistant ? (
+          <div className="absolute bottom-0 -left-2 w-4 h-4 bg-white border-l-2 border-b-2 border-amber-100/80 -rotate-45" style={{ marginBottom: '-1px' }} />
+        ) : (
+          <div className="absolute bottom-0 -right-2 w-4 h-4 bg-teal-600 -rotate-45" style={{ marginBottom: '-1px' }} />
+        )}
+        <div className="relative z-10 font-medium">
+          {renderContent(content, isAssistant)}
+        </div>
+      </motion.div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 {
-  "name": "DorFrac — Fraction Adventure!",
-  "short_name": "DorFrac",
-  "description": "Learn fractions with Dora-style adventures — split, merge, compare, and explore!",
+  "name": "FractionLab",
+  "short_name": "FractionLab",
+  "description": "Learn fractions by exploring — split, merge, compare, and discover equivalence!",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fdf2f8",

@@ -16,10 +16,10 @@ export interface VoiceCharacter {
 
 export const VOICE_CHARACTERS: VoiceCharacter[] = [
   {
-    id: "dora",
-    name: "Dora",
+    id: "maya",
+    name: "Maya",
     emoji: "👧🏽",
-    description: "Your explorer buddy!",
+    description: "Your learning buddy!",
     pitch: 1.3,
     rate: 1.1,
     voiceHints: ["Samantha", "Tessa", "Google"],
@@ -27,10 +27,10 @@ export const VOICE_CHARACTERS: VoiceCharacter[] = [
     elevenLabsVoiceId: "cgSgspJ2msm6clMCkdW9", // Jessica — playful, bright, warm young female
   },
   {
-    id: "diego",
-    name: "Diego",
+    id: "kai",
+    name: "Kai",
     emoji: "👦🏽",
-    description: "Animal rescue hero!",
+    description: "Science explorer!",
     pitch: 1.15,
     rate: 1.0,
     voiceHints: ["Daniel", "Alex", "Google UK English Male"],

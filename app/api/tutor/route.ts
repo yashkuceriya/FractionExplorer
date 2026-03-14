@@ -94,10 +94,24 @@ export async function POST(req: Request) {
 
   const modelResult = getModelAndName();
   if (!modelResult) {
-    return new Response(
-      JSON.stringify({ error: "No API key configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY in .env.local" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    // Scripted fallback — works without any API keys
+    const { getScriptedResponse } = await import("@/lib/ai/scripted-tutor");
+    const scriptedText = getScriptedResponse(messages, ws);
+
+    // Format as AI SDK Data Stream Protocol so useChat can parse it
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(`0:${JSON.stringify(scriptedText)}\n`));
+        controller.enqueue(encoder.encode(`e:{"finishReason":"stop","usage":{"promptTokens":0,"completionTokens":0}}\n`));
+        controller.enqueue(encoder.encode(`d:{"finishReason":"stop","usage":{"promptTokens":0,"completionTokens":0}}\n`));
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
   }
   const { model, name: modelName } = modelResult;
 

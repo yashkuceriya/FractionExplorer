@@ -783,7 +783,7 @@ export default function LessonPage() {
       }
     }
 
-    // Dora-style call-and-response quick replies
+    // Quick replies based on lesson phase
     switch (lessonState.phase) {
       case "intro":
         return ["Let's GO!", "I'm ready!", "What are fractions?"];
@@ -823,7 +823,7 @@ export default function LessonPage() {
 
   return (
     <div className="h-dvh flex flex-col bg-surface">
-      {/* Top bar — Dora adventure style */}
+      {/* Top bar */}
       <div className="flex items-center justify-between px-2.5 py-1 sm:py-1.5 bg-gradient-to-r from-pink-100/80 via-purple-50 to-green-50/80 border-b border-pink-200/60">
         <div className="flex items-center gap-1.5">
           <a

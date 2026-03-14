@@ -110,25 +110,31 @@ export const AVAILABLE_FRACTIONS: FractionData[] = [
   { numerator: 5, denominator: 6, color: getFractionColor(5, 6) },  // 1/6 + 5/6 = 1
 ];
 
-/** Get a random fraction not already in the given list */
-export function getRandomFraction(existing: FractionData[]): FractionData {
-  const ALL_POSSIBLE: FractionData[] = [
-    ...AVAILABLE_FRACTIONS,
-    { numerator: 5, denominator: 10, color: getFractionColor(5, 10) },
-    { numerator: 6, denominator: 12, color: getFractionColor(6, 12) },
-    { numerator: 3, denominator: 9, color: getFractionColor(3, 9) },
-    { numerator: 4, denominator: 12, color: getFractionColor(4, 12) },
-    { numerator: 4, denominator: 6, color: getFractionColor(4, 6) },
-    { numerator: 6, denominator: 8, color: getFractionColor(6, 8) },
-    { numerator: 3, denominator: 8, color: getFractionColor(3, 8) },
-    { numerator: 5, denominator: 6, color: getFractionColor(5, 6) },
-    { numerator: 2, denominator: 5, color: getFractionColor(2, 5) },
-    { numerator: 3, denominator: 5, color: getFractionColor(3, 5) },
-  ];
-  const notPresent = ALL_POSSIBLE.filter(
+const DEFAULT_RANDOM_POOL: FractionData[] = [
+  ...AVAILABLE_FRACTIONS,
+  { numerator: 5, denominator: 10, color: getFractionColor(5, 10) },
+  { numerator: 6, denominator: 12, color: getFractionColor(6, 12) },
+  { numerator: 3, denominator: 9, color: getFractionColor(3, 9) },
+  { numerator: 4, denominator: 12, color: getFractionColor(4, 12) },
+  { numerator: 4, denominator: 6, color: getFractionColor(4, 6) },
+  { numerator: 6, denominator: 8, color: getFractionColor(6, 8) },
+  { numerator: 3, denominator: 8, color: getFractionColor(3, 8) },
+  { numerator: 5, denominator: 6, color: getFractionColor(5, 6) },
+  { numerator: 2, denominator: 5, color: getFractionColor(2, 5) },
+  { numerator: 3, denominator: 5, color: getFractionColor(3, 5) },
+];
+
+/**
+ * Get a random fraction not already in `existing`.
+ * Pass `allowedPool` to restrict candidates to a mastery-gated set;
+ * omit it to use the full default pool.
+ */
+export function getRandomFraction(existing: FractionData[], allowedPool?: FractionData[]): FractionData {
+  const pool = allowedPool ?? DEFAULT_RANDOM_POOL;
+  const notPresent = pool.filter(
     (f) => !existing.some((e) => e.numerator === f.numerator && e.denominator === f.denominator)
   );
-  if (notPresent.length === 0) return ALL_POSSIBLE[Math.floor(Math.random() * ALL_POSSIBLE.length)];
+  if (notPresent.length === 0) return pool[Math.floor(Math.random() * pool.length)];
   return notPresent[Math.floor(Math.random() * notPresent.length)];
 }
 

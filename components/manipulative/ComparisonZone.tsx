@@ -34,6 +34,19 @@ export default function ComparisonZone({
           onTapPlace();
         }
       }}
+      role={!fraction && onTapPlace ? "button" : undefined}
+      tabIndex={!fraction && onTapPlace ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (!fraction && onTapPlace && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onTapPlace();
+        }
+      }}
+      aria-label={
+        fraction
+          ? `${side} comparison slot with ${fraction.numerator} over ${fraction.denominator}`
+          : `${side} comparison slot`
+      }
       className={`relative flex-1 rounded-2xl border-2 border-dashed p-3 flex flex-col items-center justify-center min-h-[90px] sm:min-h-[110px] transition-colors ${
         isOver
           ? "bg-amber-100/80 border-amber-400 shadow-inner shadow-amber-200/40"

@@ -365,7 +365,7 @@ export default function AdventureMap({
       <div className="absolute top-2.5 left-1/2 -translate-x-1/2 z-10">
         <div className="bg-gradient-to-r from-pink-500 to-purple-600 px-5 py-1.5 rounded-full shadow-lg border-2 border-pink-300/60">
           <h2 className="text-xs sm:text-sm font-black text-white tracking-wide">
-            🗺️ FRACTION ADVENTURE!
+            🗺️ FRACTION MAP!
           </h2>
         </div>
       </div>

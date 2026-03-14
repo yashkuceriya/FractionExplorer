@@ -4,12 +4,12 @@ import { StudentProvider } from "@/lib/student-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DorFrac — Fraction Adventure",
-  description: "Learn about fraction equivalence with an AI-powered math tutor",
+  title: "FractionLab",
+  description: "Learn fractions by exploring — split, merge, compare, and discover equivalence!",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "DorFrac",
+    title: "FractionLab",
     statusBarStyle: "black-translucent",
   },
 };

@@ -55,3 +55,5 @@ npx next dev --turbopack --port 3002  # Dev with hot reload
 - `safeTimeout` + `orderGenRef` generation counter to prevent stale timeout bugs
 - `sessionStorage` for lesson state persistence (skip restoring "celebration" phase)
 - `masteryLevel` increments every 3 smash+merge actions, unlocks extra fractions
+- Reset and random-add both draw from the mastery-gated pool (`initialFractions`)
+- `FractionBuilder` is an ungated sandbox — kids can build any fraction (denominator 1-12)

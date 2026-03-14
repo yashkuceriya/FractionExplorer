@@ -102,6 +102,8 @@ export default function ParentDashboard() {
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
+    // Clear active student session so reload doesn't bypass PIN
+    try { sessionStorage.clear(); } catch {}
     router.push("/login");
   }
 
@@ -202,7 +204,7 @@ export default function ParentDashboard() {
 
                 {/* Stats grid */}
                 {s.progress && (
-                  <div className="grid grid-cols-4 gap-2 mb-3">
+                  <div className="grid grid-cols-3 gap-2 mb-3">
                     <div className="bg-pink-50 rounded-xl p-2 text-center">
                       <p className="text-lg font-black text-purple-700">{s.progress.xp}</p>
                       <p className="text-[10px] font-bold text-purple-500">Total XP</p>
@@ -214,10 +216,6 @@ export default function ParentDashboard() {
                     <div className="bg-blue-50 rounded-xl p-2 text-center">
                       <p className="text-lg font-black text-blue-700">{s.progress.discovered_equivalences.length}</p>
                       <p className="text-[10px] font-bold text-blue-500">Discoveries</p>
-                    </div>
-                    <div className="bg-purple-50 rounded-xl p-2 text-center">
-                      <p className="text-lg font-black text-purple-700">{s.badges.length}</p>
-                      <p className="text-[10px] font-bold text-purple-500">Badges</p>
                     </div>
                   </div>
                 )}

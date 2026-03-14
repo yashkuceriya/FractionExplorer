@@ -36,7 +36,7 @@ export default function ChatPanel({
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-amber-50/50 to-white/30">
-      {/* Character header — like Dora talking to camera */}
+      {/* Character header */}
       <div className="px-3 py-2 bg-gradient-to-r from-orange-100/80 to-amber-50/80 border-b border-amber-200/60 flex items-center gap-2.5">
         <div className="relative">
           <TutorAvatar size={44} animate={isSpeaking} characterId={characterId} />

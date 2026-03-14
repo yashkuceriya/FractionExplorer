@@ -33,12 +33,11 @@ import {
   getFractionColor,
   areFractionsEqual,
   getRandomFraction,
-  gcd,
   lcm,
   type FractionData,
 } from "@/lib/fractions";
 import { playDrop, playSuccess, playSmash, playMerge, playError, playReset, playPickup } from "@/lib/sounds";
-import { MODE_UNLOCK_LEVELS, LEVEL_NAMES } from "@/lib/progress";
+import { MODE_UNLOCK_LEVELS } from "@/lib/progress";
 
 /** Check if two fractions can merge. Returns the result fraction or null. */
 function canMergeFractions(
@@ -69,25 +68,21 @@ function buildMergeLabel(
   return `${sN}/${sD} + ${tN}/${tD} = ${convertedSN}/${rD} + ${convertedTN}/${rD} = ${rN}/${rD}`;
 }
 
+type ChallengeMode = "compare" | "battle" | "tower" | "recipe" | "pizza" | "rain";
+
+// Extra fractions: first 3 always in pool; rest unlock with mastery (1 per 2 points)
 const EXTRA_FRACTIONS: FractionData[] = [
-  // Always-available extras (base)
   { numerator: 2, denominator: 4, color: getFractionColor(2, 4) },
   { numerator: 2, denominator: 6, color: getFractionColor(2, 6) },
   { numerator: 3, denominator: 6, color: getFractionColor(3, 6) },
-  // Unlock with mastery
   { numerator: 2, denominator: 8, color: getFractionColor(2, 8) },
   { numerator: 4, denominator: 8, color: getFractionColor(4, 8) },
   { numerator: 2, denominator: 3, color: getFractionColor(2, 3) },
   { numerator: 3, denominator: 4, color: getFractionColor(3, 4) },
-  // Extended pool — many more equivalences for richer matching
   ...EXTENDED_FRACTIONS,
 ];
-
-// Unlockable pieces: first 3 always available, rest unlock with mastery (1 per 2 points)
 const LOCKED_FRACTIONS: FractionData[] = EXTRA_FRACTIONS.slice(3);
 const BASE_EXTRA_FRACTIONS: FractionData[] = EXTRA_FRACTIONS.slice(0, 3);
-
-type ChallengeMode = "compare" | "battle" | "tower" | "recipe" | "pizza" | "rain";
 
 const CHALLENGE_TABS: { mode: ChallengeMode; label: string; emoji: string }[] = [
   { mode: "compare", label: "Twins?", emoji: "⚖️" },
@@ -113,6 +108,28 @@ interface LiveBlock {
 let blockIdCounter = 0;
 function nextBlockId() {
   return `block-${++blockIdCounter}`;
+}
+
+const STARTER_FRACTIONS: FractionData[] = [
+  // The first match kids will find (tutor guides them here)
+  { numerator: 1, denominator: 2, color: getFractionColor(1, 2) },
+  { numerator: 2, denominator: 4, color: getFractionColor(2, 4) },
+  // Second match to discover on their own
+  { numerator: 1, denominator: 3, color: getFractionColor(1, 3) },
+  { numerator: 2, denominator: 6, color: getFractionColor(2, 6) },
+  // Complement pairs (make a whole)
+  { numerator: 2, denominator: 3, color: getFractionColor(2, 3) },
+  { numerator: 1, denominator: 4, color: getFractionColor(1, 4) },
+  { numerator: 3, denominator: 4, color: getFractionColor(3, 4) },
+  // One more equivalence hidden in plain sight
+  { numerator: 3, denominator: 6, color: getFractionColor(3, 6) },
+];
+
+function buildStarterBlocks() {
+  return STARTER_FRACTIONS.map((fraction) => ({
+    id: nextBlockId(),
+    ...fraction,
+  }));
 }
 
 interface FractionWorkspaceProps {
@@ -184,7 +201,7 @@ export default function FractionWorkspace({
     []
   );
 
-  // Unlockable: unlock 1 extra fraction per 2 mastery points
+  // Unlock 1 extra fraction per 2 mastery points (for reset pool and progression)
   const unlockedExtras = useMemo(() => {
     const count = Math.min(LOCKED_FRACTIONS.length, Math.floor(masteryLevel / 2));
     return LOCKED_FRACTIONS.slice(0, count);
@@ -192,29 +209,12 @@ export default function FractionWorkspace({
 
   const initialFractions = useMemo(
     () => [...AVAILABLE_FRACTIONS, ...BASE_EXTRA_FRACTIONS, ...unlockedExtras],
-    [unlockedExtras]
+    [unlockedExtras],
   );
 
-  // Starter blocks — 8 blocks forming clear discoverable pairs
-  // Equivalence pairs: 1/2=2/4, 1/3=2/6
-  // Complement pairs: 1/3+2/3=1, 1/4+3/4=1
-  const [blocks, setBlocks] = useState<LiveBlock[]>(() => {
-    const starter: FractionData[] = [
-      // The first match kids will find (tutor guides them here)
-      { numerator: 1, denominator: 2, color: getFractionColor(1, 2) },
-      { numerator: 2, denominator: 4, color: getFractionColor(2, 4) },
-      // Second match to discover on their own
-      { numerator: 1, denominator: 3, color: getFractionColor(1, 3) },
-      { numerator: 2, denominator: 6, color: getFractionColor(2, 6) },
-      // Complement pairs (make a whole)
-      { numerator: 2, denominator: 3, color: getFractionColor(2, 3) },
-      { numerator: 1, denominator: 4, color: getFractionColor(1, 4) },
-      { numerator: 3, denominator: 4, color: getFractionColor(3, 4) },
-      // One more equivalence hidden in plain sight
-      { numerator: 3, denominator: 6, color: getFractionColor(3, 6) },
-    ];
-    return starter.map((f) => ({ id: nextBlockId(), ...f }));
-  });
+  // Starter blocks — 8 blocks forming clear discoverable pairs (initial load only)
+  // Equivalence pairs: 1/2=2/4, 1/3=2/6; complement pairs: 1/3+2/3=1, 1/4+3/4=1
+  const [blocks, setBlocks] = useState<LiveBlock[]>(() => buildStarterBlocks());
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [mergeTargetId, setMergeTargetId] = useState<string | null>(null);
@@ -232,9 +232,6 @@ export default function FractionWorkspace({
   const [pizzaDrop, setPizzaDrop] = useState<(FractionDrop & { droppableId: string }) | null>(null);
   const dropSeqRef = useRef(0);
   const smashLabelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [lockedTooltip, setLockedTooltip] = useState<string | null>(null);
-  const lockedTooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // AI-suggested mode switch
   useEffect(() => {
     if (suggestedMode && CHALLENGE_TABS.some((t) => t.mode === suggestedMode)) {
@@ -569,6 +566,23 @@ export default function FractionWorkspace({
     );
   };
 
+  const resetWorkspace = useCallback(() => {
+    playReset();
+    setBlocks(
+      initialFractions.map((f) => ({ id: nextBlockId(), ...f })),
+    );
+    setSmashLabel(null);
+    setSelectedBlockId(null);
+    setActiveDragId(null);
+    setMergeTargetId(null);
+    setMergePreview(null);
+    setBattleDrop(null);
+    setTowerDrop(null);
+    setRecipeDrop(null);
+    setPizzaDrop(null);
+    onComparisonChange(null, null);
+  }, [initialFractions, onComparisonChange]);
+
   return (
     <DndContext
       sensors={sensors}
@@ -578,54 +592,49 @@ export default function FractionWorkspace({
       onDragEnd={handleDragEnd}
     >
       <div
-        className="h-full flex flex-col bg-white rounded-2xl shadow-sm border-2 border-amber-100/80 overflow-hidden relative fraction-workspace"
+        className="h-full flex flex-col bg-white rounded-[2rem] shadow-xl border-4 border-amber-100/50 overflow-hidden relative fraction-workspace"
         data-no-select
       >
 
-        {/* Header — adventure-themed */}
-        <div className="px-3 sm:px-4 py-1.5 bg-gradient-to-r from-amber-100/80 via-orange-50/60 to-emerald-50/80 border-b border-amber-200/60 landscape-compact">
+        {/* Header — immersive adventure style */}
+        <div className="px-4 py-2.5 bg-gradient-to-b from-amber-50 to-white border-b-2 border-amber-100/40 relative z-10">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-black text-amber-800 flex items-center gap-1.5">
-              <span className="text-base">🌴</span> Fraction Jungle
-            </h2>
-            <div className="flex items-center gap-1.5">
-              <Backpack
-                onSelectTool={(tool) => {
-                  if (tool === "random") {
-                    const existing = blocks.map((b) => ({ numerator: b.numerator, denominator: b.denominator, color: b.color }));
-                    const newFrac = getRandomFraction(existing);
-                    playPickup();
-                    setBlocks((prev) => [...prev, { id: nextBlockId(), ...newFrac, fresh: true }]);
-                  } else if (tool === "split" && selectedBlockId) {
-                    handleSmash(selectedBlockId);
-                    setSelectedBlockId(null);
-                  } else if (tool === "merge" && selectedBlockId) {
-                    handleMerge(selectedBlockId);
-                    setSelectedBlockId(null);
-                  } else if (tool === "build") {
-                    // Builder already in workspace — just scroll to it
-                  }
-                }}
-              />
+            <div className="flex flex-col">
+              <h2 className="text-xs font-black text-amber-800 uppercase tracking-widest flex items-center gap-1.5 opacity-60">
+                <span>🌴</span> Fraction Lab
+              </h2>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-black text-amber-950">Workspace</span>
+                {selectedBlockId && (
+                  <motion.span 
+                    initial={{ scale: 0 }} 
+                    animate={{ scale: 1 }}
+                    className="px-2 py-0.5 bg-pink-100 text-pink-600 text-[10px] font-black rounded-full uppercase"
+                  >
+                    Block Selected!
+                  </motion.span>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowNumberLine((v) => !v)}
-                className={`text-xs px-2 py-1 rounded-lg font-medium transition-colors ${
+                className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all btn-squishy ${
                   showNumberLine
-                    ? "bg-amber-200 text-amber-700"
-                    : "bg-white/60 text-gray-400"
+                    ? "bg-amber-400 text-white"
+                    : "bg-white border-2 border-amber-100 text-amber-400"
                 }`}
+                aria-label={showNumberLine ? "Hide number line" : "Show number line"}
+                title="Toggle Number Line"
               >
                 📏
               </button>
               <button
-                onClick={() => {
-                  playReset();
-                  setBlocks(
-                    initialFractions.map((f) => ({ id: nextBlockId(), ...f }))
-                  );
-                  setSmashLabel(null);
-                }}
-                className="text-xs px-2.5 py-1 rounded-lg bg-white/60 text-gray-400 active:bg-red-50 active:text-red-500 font-medium transition-colors"
+                onClick={resetWorkspace}
+                className="w-10 h-10 rounded-2xl bg-white border-2 border-red-50 text-red-300 flex items-center justify-center transition-all btn-squishy active:bg-red-50"
+                aria-label="Reset fraction workspace"
+                title="Reset Workspace"
               >
                 🔄
               </button>
@@ -734,9 +743,9 @@ export default function FractionWorkspace({
           )}
         </AnimatePresence>
 
-        {/* Fraction pieces */}
-        <div className="flex-1 overflow-y-auto px-1.5 py-2 sm:p-3 relative">
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-2 sm:gap-x-3 sm:gap-y-2.5 justify-items-center py-1">
+        {/* Fraction pieces area with Jungle Floor */}
+        <div className="flex-1 overflow-y-auto jungle-floor px-3 py-4 relative">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 justify-items-center py-2">
             {blocks.map((block) => {
               const isGuidedHighlight = isFractionHighlighted(
                 block.numerator,
@@ -748,7 +757,12 @@ export default function FractionWorkspace({
               return (
                 <div
                   key={block.id}
-                  onClick={() => setSelectedBlockId(isSelected ? null : block.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedBlockId(isSelected ? null : block.id);
+                  }}
+                  className="relative transition-transform duration-200"
+                  style={{ zIndex: isSelected ? 40 : 10 }}
                 >
                   <FractionPiece
                     id={block.id}
@@ -770,47 +784,76 @@ export default function FractionWorkspace({
                     mergePreview={isMTarget ? mergePreview : null}
                     isEquivalentShimmer={equivalentBlockIds.has(block.id)}
                   />
+                  {isSelected && (
+                    <motion.div 
+                      layoutId="block-select-ring"
+                      className="absolute -inset-3 border-4 border-pink-400 rounded-[2rem] pointer-events-none z-0"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    />
+                  )}
                 </div>
               );
             })}
           </div>
 
-          {/* Block creation — compact row */}
-          <div className="flex items-center justify-center gap-2 pt-2 pb-1 px-2">
-            <FractionBuilder
-              onBuild={(frac) => {
-                playPickup();
-                setBlocks((prev) => [
-                  ...prev,
-                  { id: nextBlockId(), ...frac, fresh: true },
-                ]);
-              }}
-            />
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => {
-                const existing = blocks.map((b) => ({ numerator: b.numerator, denominator: b.denominator, color: b.color }));
-                const newFrac = getRandomFraction(existing);
-                playPickup();
-                setBlocks((prev) => [
-                  ...prev,
-                  { id: nextBlockId(), ...newFrac, fresh: true },
-                ]);
-              }}
-              className="h-10 px-3 bg-gradient-to-r from-emerald-400 to-teal-500 text-white text-[11px] font-bold rounded-xl shadow-sm active:scale-95 transition-transform"
-            >
-              🎲 New!
-            </button>
+          {/* Floating Action Menu — Backpack & Build */}
+          <div className="sticky bottom-4 left-0 right-0 flex items-center justify-center gap-3 z-50 pointer-events-none pb-2">
+            <div className="pointer-events-auto flex items-center gap-3 px-4 py-3 bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border-2 border-amber-100/50">
+              <Backpack
+                onSelectTool={(tool) => {
+                  if (tool === "random") {
+                    const existing = blocks.map((b) => ({ numerator: b.numerator, denominator: b.denominator, color: b.color }));
+                    const newFrac = getRandomFraction(existing, initialFractions);
+                    playPickup();
+                    setBlocks((prev) => [...prev, { id: nextBlockId(), ...newFrac, fresh: true }]);
+                  } else if (tool === "split" && selectedBlockId) {
+                    handleSmash(selectedBlockId);
+                    setSelectedBlockId(null);
+                  } else if (tool === "merge" && selectedBlockId) {
+                    handleMerge(selectedBlockId);
+                    setSelectedBlockId(null);
+                  }
+                }}
+              />
+              <div className="w-px h-8 bg-amber-100" />
+              <FractionBuilder
+                onBuild={(frac) => {
+                  playPickup();
+                  setBlocks((prev) => [
+                    ...prev,
+                    { id: nextBlockId(), ...frac, fresh: true },
+                  ]);
+                }}
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const existing = blocks.map((b) => ({ numerator: b.numerator, denominator: b.denominator, color: b.color }));
+                  const newFrac = getRandomFraction(existing, initialFractions);
+                  playPickup();
+                  setBlocks((prev) => [...prev, { id: nextBlockId(), ...newFrac, fresh: true }]);
+                }}
+                className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-2xl shadow-md btn-squishy flex items-center justify-center text-xl"
+                aria-label="Add a random fraction block"
+                title="Get Random Block"
+              >
+                🎲
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Challenge Zone — the adventure area */}
-        <div className="bg-gradient-to-t from-amber-100/60 via-amber-50/40 to-white border-t-2 border-amber-200/60">
-          {/* Challenge mode tabs — show all, locked ones are grayed with lock icon */}
-          <div className="flex gap-1.5 px-2 sm:px-3 pt-1.5 pb-1 overflow-x-auto scrollbar-hide landscape-compact">
+        <div className="bg-white border-t-4 border-amber-100/40 relative z-20">
+          {/* Challenge mode "Navigator" tabs */}
+          <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide bg-amber-50/30">
             {CHALLENGE_TABS.map((tab) => {
               const isUnlocked = unlockedModes.includes(tab.mode);
               const unlockLevel = MODE_UNLOCK_LEVELS[tab.mode] ?? 0;
+              const isActive = challengeMode === tab.mode;
+              
               return (
               <button
                 key={tab.mode}
@@ -822,27 +865,32 @@ export default function FractionWorkspace({
                     onGameEvent?.(`[Student switched to ${tab.label} (${tab.emoji}) mode. Give a casual tip for this mode.]`);
                   }
                 }}
-                className={`text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5 min-h-[44px] rounded-2xl font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 ${
+                className={`flex-shrink-0 px-4 py-2.5 rounded-2xl font-black text-xs transition-all btn-squishy flex items-center gap-2 ${
                   !isUnlocked
-                    ? "bg-gray-100 text-gray-300 border border-gray-200 cursor-default opacity-60"
-                    : challengeMode === tab.mode
-                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
-                    : "bg-white text-gray-500 border border-gray-200 active:bg-amber-50"
+                    ? "bg-gray-100 text-gray-300 border border-gray-200 cursor-default opacity-50"
+                    : isActive
+                    ? "bg-gradient-to-br from-orange-400 to-amber-500 text-white shadow-lg"
+                    : "bg-white text-amber-700 border-2 border-amber-100 active:bg-amber-50"
                 }`}
-                title={!isUnlocked ? `Unlocks at ${LEVEL_NAMES[unlockLevel] || `Level ${unlockLevel}`}` : tab.label}
               >
-                <span className="text-base">{isUnlocked ? tab.emoji : "🔒"}</span>
-                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="text-lg">{isUnlocked ? tab.emoji : "🔒"}</span>
+                <span>{tab.label}</span>
+                {isActive && (
+                  <motion.div 
+                    layoutId="active-tab-dot"
+                    className="w-1.5 h-1.5 bg-white rounded-full"
+                  />
+                )}
               </button>
               );
             })}
           </div>
 
-          <div className="p-2 sm:p-3 pt-2 min-h-[140px] landscape-shorter">
+          <div className="p-4 pt-2 min-h-[160px] relative">
             {/* Compare mode (original) */}
             {challengeMode === "compare" && (
-              <>
-                <div className="flex gap-2 sm:gap-3 items-center">
+              <div className="flex flex-col gap-4">
+                <div className="flex gap-3 items-center justify-center">
                   <ComparisonZone
                     side="left"
                     fraction={comparisonLeft}
@@ -852,20 +900,30 @@ export default function FractionWorkspace({
                       if (block) {
                         onComparisonChange({ numerator: block.numerator, denominator: block.denominator, color: block.color }, comparisonRight);
                         setSelectedBlockId(null);
+                        playDrop();
                       }
                     } : undefined}
                   />
-                  <motion.div
-                    animate={
-                      isMatch
-                        ? { scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }
-                        : {}
-                    }
-                    transition={{ type: "tween", duration: 0.5 }}
-                    className="text-xl font-bold text-gray-300 shrink-0 w-8 text-center"
-                  >
-                    {isMatch ? "=" : "?"}
-                  </motion.div>
+                  
+                  <div className="relative w-12 h-12 flex items-center justify-center">
+                    <motion.div
+                      animate={isMatch ? { rotate: 360 } : { rotate: 0 }}
+                      transition={{ duration: 2, repeat: isMatch ? Infinity : 0, ease: "linear" }}
+                      className={`absolute inset-0 rounded-full border-4 border-dashed ${isMatch ? "border-emerald-400 opacity-40" : "border-amber-100 opacity-20"}`}
+                    />
+                    <motion.span
+                      animate={
+                        isMatch
+                          ? { scale: [1, 1.4, 1], color: ["#d1d5db", "#10b981", "#10b981"] }
+                          : { scale: 1, color: "#d1d5db" }
+                      }
+                      transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                      className="text-2xl font-black relative z-10"
+                    >
+                      {isMatch ? "=" : "?"}
+                    </motion.span>
+                  </div>
+
                   <ComparisonZone
                     side="right"
                     fraction={comparisonRight}
@@ -875,73 +933,37 @@ export default function FractionWorkspace({
                       if (block) {
                         onComparisonChange(comparisonLeft, { numerator: block.numerator, denominator: block.denominator, color: block.color });
                         setSelectedBlockId(null);
+                        playDrop();
                       }
                     } : undefined}
                   />
                 </div>
 
-                {/* Result indicator */}
+                {/* Result indicator — Clean & Impressive */}
                 <AnimatePresence>
                   {comparisonLeft && comparisonRight && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                        scale: areFractionsEqual(comparisonLeft, comparisonRight)
-                          ? [0.95, 1.1, 0.97, 1.03, 1]
-                          : 1,
-                      }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 20,
-                        scale: areFractionsEqual(comparisonLeft, comparisonRight)
-                          ? { type: "tween", duration: 0.6, ease: "easeOut" }
-                          : undefined,
-                      }}
-                      className={`mt-3 text-center text-sm font-bold py-2.5 rounded-xl ${
+                      initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className={`p-4 rounded-3xl text-center shadow-xl border-2 flex items-center justify-center gap-3 ${
                         areFractionsEqual(comparisonLeft, comparisonRight)
-                          ? "text-emerald-600 bg-emerald-50 border border-emerald-200"
-                          : "text-orange-600 bg-orange-50 border border-orange-200"
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                          : "bg-amber-50 border-amber-200 text-amber-800"
                       }`}
                     >
-                      {areFractionsEqual(comparisonLeft, comparisonRight) ? (
-                        <span className="inline-flex items-center gap-1.5">
-                          <motion.span
-                            animate={{ rotate: [0, -15, 15, -10, 10, 0] }}
-                            transition={{ type: "tween", duration: 0.6 }}
-                          >
-                            🎉
-                          </motion.span>
-                          <span>
-                            Yes! {comparisonLeft.numerator}/{comparisonLeft.denominator} = {comparisonRight.numerator}/{comparisonRight.denominator}
-                          </span>
-                          <motion.span
-                            animate={{ scale: [1, 1.4, 1] }}
-                            transition={{ type: "tween", duration: 0.5, repeat: 2 }}
-                          >
-                            ✓
-                          </motion.span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5">
-                          <motion.span
-                            animate={{ x: [0, -4, 4, -2, 2, 0] }}
-                            transition={{ type: "tween", duration: 0.5 }}
-                          >
-                            🤔
-                          </motion.span>
-                          <span>
-                            {comparisonLeft.numerator}/{comparisonLeft.denominator} and {comparisonRight.numerator}/{comparisonRight.denominator} — Different sizes! Keep exploring!
-                          </span>
-                        </span>
-                      )}
+                      <span className="text-2xl">
+                        {areFractionsEqual(comparisonLeft, comparisonRight) ? "🌟" : "🧗"}
+                      </span>
+                      <p className="text-sm font-black">
+                        {areFractionsEqual(comparisonLeft, comparisonRight) 
+                          ? "Perfect Match! You found a twin!" 
+                          : "Almost! They are different sizes. Try another!"}
+                      </p>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </>
+              </div>
             )}
 
             {/* Battle mode */}

@@ -31,7 +31,7 @@ const PHASE_INFO: Record<string, { emoji: string; title: string; summary: string
   celebration: {
     emoji: "🎉",
     title: "WE DID IT!",
-    summary: "What an amazing adventure! You're a true Fraction Explorer!",
+    summary: "What an amazing adventure! You're a fraction pro!",
     location: "Victory!",
   },
 };

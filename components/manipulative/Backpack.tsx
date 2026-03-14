@@ -60,7 +60,7 @@ export default function Backpack({ onSelectTool, disabled }: BackpackProps) {
                 <div className="text-center mb-3">
                   <p className="text-3xl mb-1">🎒</p>
                   <h3 className="text-lg font-black text-purple-800">Backpack!</h3>
-                  <p className="text-[10px] font-bold text-purple-400">Pick a tool for your adventure!</p>
+                  <p className="text-[10px] font-bold text-purple-400">Pick a tool!</p>
                 </div>
 
                 {/* Tools grid */}

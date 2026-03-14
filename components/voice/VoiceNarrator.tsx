@@ -159,6 +159,7 @@ export default function VoiceNarrator({
 
   const stopSpeaking = useCallback(() => {
     cancelledRef.current = true;
+    lastSpokenRef.current = ""; // Allow re-triggering same message
     // Stop ElevenLabs audio if playing
     if (audioRef.current) {
       audioRef.current.pause();
@@ -289,20 +290,27 @@ export default function VoiceNarrator({
       if (!enabled || !message) return;
       if (typeof window === "undefined") return;
 
-      // Always stop any in-progress speech first (prevents overlap)
-      stopSpeaking();
-
       // Skip if identical to last spoken message
       if (message === lastSpokenRef.current) return;
-
-      // Small delay to let audio system settle after stop
-      await new Promise((r) => setTimeout(r, 80));
-
-      cancelledRef.current = false;
       lastSpokenRef.current = message;
 
+      // Stop any in-progress speech
+      cancelledRef.current = true;
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+        audioRef.current = null;
+      }
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+
+      // Small delay to let audio system settle
+      await new Promise((r) => setTimeout(r, 100));
+      cancelledRef.current = false;
+
       const cleanMessage = cleanForSpeech(message);
-      if (!cleanMessage) return;
+      if (!cleanMessage || cancelledRef.current) return;
 
       // Show subtitle
       const readableText = message
@@ -323,17 +331,23 @@ export default function VoiceNarrator({
       if (!handled && !cancelledRef.current) {
         if (window.speechSynthesis) {
           speakWebSpeech(cleanMessage);
+        } else if (process.env.NODE_ENV === "development") {
+          console.warn("[VoiceNarrator] No speechSynthesis available");
         }
       }
     },
-    [enabled, updateSpeaking, character, tryElevenLabs, speakWebSpeech, stopSpeaking]
+    [enabled, character, tryElevenLabs, speakWebSpeech]
   );
+
+  // Use ref to avoid useEffect re-firing when speak is recreated
+  const speakRef = useRef(speak);
+  speakRef.current = speak;
 
   useEffect(() => {
     if (text && enabled) {
-      speak(text);
+      speakRef.current(text);
     }
-  }, [text, enabled, speak]);
+  }, [text, enabled]);
 
   // Load voices + iOS Safari warm-up
   useEffect(() => {

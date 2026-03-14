@@ -10,7 +10,7 @@ import { loadProgress, LEVEL_NAMES, LEVEL_EMOJIS, type PlayerProgress } from "@/
 import { loadSelectedCharacter, type VoiceCharacter } from "@/lib/voice-characters";
 import { useStudent } from "@/lib/student-context";
 
-const JUNGLE_ITEMS = [
+const FLOATING_ITEMS = [
   { text: "🌿", x: 4, y: 8, size: "text-3xl" },
   { text: "🌺", x: 92, y: 12, size: "text-2xl" },
   { text: "🦋", x: 8, y: 85, size: "text-xl" },
@@ -37,7 +37,7 @@ export default function WelcomePage() {
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center bg-gradient-to-b from-pink-100 via-purple-50 to-green-100 p-4 sm:p-6 relative overflow-hidden">
       {/* Jungle scenery */}
-      {JUNGLE_ITEMS.map((f, i) => (
+      {FLOATING_ITEMS.map((f, i) => (
         <motion.span
           key={i}
           initial={{ opacity: 0 }}
@@ -88,10 +88,10 @@ export default function WelcomePage() {
           <div className="bg-white rounded-2xl px-5 py-3 shadow-lg border-2 border-pink-200 relative max-w-[300px] mx-auto">
             <p className="text-sm font-black text-purple-900 leading-snug">
               {student
-                ? `Hey ${student.name}! ${LEVEL_EMOJIS[progress?.level ?? 0]} Ready for more fraction adventures?`
+                ? `Hey ${student.name}! ${LEVEL_EMOJIS[progress?.level ?? 0]} Ready to explore more fractions?`
                 : isReturning
-                ? `You're back! ${LEVEL_EMOJIS[progress!.level]} Ready for more adventures?`
-                : `Hey! I'm ${voiceChar?.name ?? "Frax"}! Let's go on a fraction adventure together!`
+                ? `You're back! ${LEVEL_EMOJIS[progress!.level]} Ready to keep exploring?`
+                : `Hey! I'm ${voiceChar?.name ?? "Frax"}! Let's explore fractions together!`
               }
             </p>
             <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l-2 border-t-2 border-pink-200 rotate-45" />
@@ -100,9 +100,9 @@ export default function WelcomePage() {
 
         {/* Title */}
         <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-green-500 bg-clip-text text-transparent mb-0.5 tracking-tight">
-          DorFrac
+          FractionLab
         </h1>
-        <p className="text-sm font-black text-purple-500/80 mb-4 tracking-wide">Fraction Adventure!</p>
+        <p className="text-sm font-black text-purple-500/80 mb-4 tracking-wide">Learn fractions by exploring</p>
 
         {/* Progress for returning players */}
         {isReturning && progress ? (
@@ -138,7 +138,7 @@ export default function WelcomePage() {
             transition={{ delay: 0.4 }}
             className="text-base text-purple-600/60 mb-5 font-bold"
           >
-            Discover fraction twins hiding in the jungle!
+            Discover which fractions are secretly the same!
           </motion.p>
         )}
 
@@ -166,7 +166,7 @@ export default function WelcomePage() {
           onClick={() => router.push("/lesson")}
           className="px-14 py-4 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 text-white text-xl font-black rounded-2xl shadow-xl shadow-pink-400/40 active:shadow-md transition-shadow border-2 border-pink-300/50 tracking-wide"
         >
-          {isReturning ? "Let's GO!" : "Start Adventure!"}
+          {isReturning ? "Let's GO!" : "Let's Go!"}
         </motion.button>
 
         {/* Feature badges */}
