@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <!-- Background -->
+  <rect width="180" height="180" rx="40" fill="#FEF3C7"/>
+  <!-- Cookie base -->
+  <circle cx="90" cy="90" r="65" fill="#F5A623"/>
+  <circle cx="90" cy="90" r="58" fill="#E8963F"/>
+  <!-- Split line -->
+  <line x1="90" y1="28" x2="90" y2="152" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
+  <!-- Chocolate chips -->
+  <circle cx="62" cy="58" r="7" fill="#6B3A2A"/>
+  <circle cx="118" cy="62" r="6" fill="#6B3A2A"/>
+  <circle cx="58" cy="100" r="6" fill="#6B3A2A"/>
+  <circle cx="115" cy="108" r="7" fill="#6B3A2A"/>
+  <circle cx="75" cy="122" r="5" fill="#6B3A2A"/>
+  <circle cx="108" cy="76" r="5" fill="#6B3A2A"/>
+  <!-- 1/2 label -->
+  <text x="58" y="84" font-family="Arial,sans-serif" font-weight="bold" font-size="22" fill="#fff" text-anchor="middle">1</text>
+  <line x1="48" y1="88" x2="68" y2="88" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+  <text x="58" y="108" font-family="Arial,sans-serif" font-weight="bold" font-size="22" fill="#fff" text-anchor="middle">2</text>
+</svg>
