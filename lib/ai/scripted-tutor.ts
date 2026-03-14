@@ -115,6 +115,13 @@ const WELCOME_MESSAGES = [
   "Oh hi everybody! ...I mean, oh hi YOU! Let's do some fraction stuff — it's gonna be awesome!",
 ];
 
+const EPISODE_WELCOME_MESSAGES = [
+  "Okay so today — we're sharing things! Like cookies! And pizza! Just follow along and I'll show you!",
+  "Hey hey hey! Ready for your mission? Read the card at the top and let's DO this!",
+  "Welcome back! You've got a new mission waiting — check it out up top!",
+  "Oh YEAH, let's go! Your mission is right there at the top. I believe in you!",
+];
+
 const CELEBRATION_MESSAGES = [
   "You did it! You're officially a fraction expert! I can't believe— actually yes I can, you're amazing!",
   "WOW! Look how much you learned today! I'm actually getting emotional! ...okay I'm fine. But STILL!",
@@ -151,6 +158,10 @@ export function getScriptedResponse(
 
   // --- Episode mode ---
   if (ws.episodeMode) {
+    // First message in episode — welcoming intro
+    if (messages.length <= 2 || lastUserMsg.includes("[Episode started")) {
+      return pick(EPISODE_WELCOME_MESSAGES);
+    }
     // Correct answer
     if (lastUserMsg.includes("[Student completed")) {
       return pick(CORRECT_RESPONSES);

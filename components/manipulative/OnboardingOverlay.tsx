@@ -5,36 +5,36 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const STEPS = [
   {
-    title: "Drag to Compare",
+    title: "Follow Your Mission!",
     description:
-      "Pick up any fraction block and drop it into the left or right comparison zone to see if two fractions are equal!",
+      "Your tutor will give you missions — like splitting a cookie or coloring pizza slices. Just follow along!",
+    emoji: "📝",
+    hint: "Read the mission card at the top",
+    visual: "🍪 → ✂️ → 🎉",
+  },
+  {
+    title: "Tap & Drag",
+    description:
+      "Tap buttons to split things into pieces, then tap or drag to color them. The tutor will tell you what to do!",
     emoji: "👆",
-    hint: "Try 1/2 on the left and 2/4 on the right",
-    visual: "⚖️",
+    hint: "Big colorful buttons = tap me!",
+    visual: "🟦🟦⬜⬜ = 2/4",
   },
   {
-    title: "Tap to Split",
+    title: "Discover Twins!",
     description:
-      "See a fraction like 2/4 or 3/6? Tap it to smash it into smaller equal pieces and see what it's made of!",
-    emoji: "💥",
-    hint: "Tap any block with a 💥 badge",
-    visual: "2/4 → 1/4 + 1/4",
+      "Some fractions are secretly the same! 1/2 and 2/4 are twins. You'll discover this by playing!",
+    emoji: "🔍",
+    hint: "Same amount, different pieces",
+    visual: "1/2 = 2/4 🤯",
   },
   {
-    title: "Drag to Merge",
+    title: "Explore Mode",
     description:
-      "Drag one fraction block onto another to combine them — works even with different denominators like 1/2 and 1/4!",
-    emoji: "🧲",
-    hint: "Or use the green + button",
-    visual: "1/4 + 1/4 = 2/4",
-  },
-  {
-    title: "Try Other Activities",
-    description:
-      "Switch tabs below the blocks to try Pizza Party, Fraction Battle, Tower Builder, and more!",
+      "After missions, switch to Explore to drag fraction blocks, smash them apart, and merge them together!",
     emoji: "🎮",
-    hint: "Each one teaches fractions in a fun way",
-    visual: "🍕 ⚔️ 🏗️ 🍳",
+    hint: "Split, merge, compare — have fun!",
+    visual: "💥 🧲 ⚖️",
   },
 ];
 

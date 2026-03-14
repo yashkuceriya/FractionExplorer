@@ -102,7 +102,10 @@ export default function WelcomePage() {
         <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-green-500 bg-clip-text text-transparent mb-0.5 tracking-tight">
           FractionLab
         </h1>
-        <p className="text-sm font-black text-purple-500/80 mb-4 tracking-wide">Learn fractions by exploring</p>
+        <p className="text-sm font-black text-purple-500/80 mb-1 tracking-wide">Learn fractions by exploring</p>
+        <p className="text-xs text-purple-400/70 mb-4 max-w-[260px] mx-auto leading-relaxed">
+          An AI-powered fraction tutor for ages 5-8. Split, merge, compare — discover that 1/2 and 2/4 are the same!
+        </p>
 
         {/* Progress for returning players */}
         {isReturning && progress ? (
@@ -131,16 +134,7 @@ export default function WelcomePage() {
               )}
             </div>
           </motion.div>
-        ) : (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-base text-purple-600/60 mb-5 font-bold"
-          >
-            Discover which fractions are secretly the same!
-          </motion.p>
-        )}
+        ) : null}
 
         {/* Voice character picker */}
         {voiceChar && (
@@ -157,17 +151,31 @@ export default function WelcomePage() {
           </motion.div>
         )}
 
-        {/* Big CTA button */}
+        {/* Primary CTA — Start First Lesson */}
         <motion.button
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => router.push("/lesson")}
-          className="px-14 py-4 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 text-white text-xl font-black rounded-2xl shadow-xl shadow-pink-400/40 active:shadow-md transition-shadow border-2 border-pink-300/50 tracking-wide"
+          className="w-full max-w-[300px] px-8 py-4 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 text-white text-xl font-black rounded-2xl shadow-xl shadow-pink-400/40 active:shadow-md transition-shadow border-2 border-pink-300/50 tracking-wide"
         >
-          Let&apos;s Go!
+          {isReturning ? "Continue Learning!" : "Start First Lesson"}
         </motion.button>
+
+        {/* Secondary — Parent Setup */}
+        {isGuest && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.65 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push("/signup")}
+            className="mt-3 w-full max-w-[300px] px-6 py-3 bg-white/80 backdrop-blur-sm text-purple-600 text-sm font-bold rounded-2xl border-2 border-purple-200 active:bg-purple-50 transition-colors"
+          >
+            Parent Setup &amp; Progress Tracking
+          </motion.button>
+        )}
 
         {/* Feature badges */}
         <motion.div
@@ -178,7 +186,7 @@ export default function WelcomePage() {
         >
           {[
             { emoji: "🗺️", label: "18 Episodes" },
-            { emoji: "🏆", label: "Badges" },
+            { emoji: "🏆", label: "Badges & XP" },
             { emoji: "🎤", label: "Voice Tutor" },
             { emoji: "🧩", label: "Manipulatives" },
           ].map((f) => (
@@ -191,29 +199,32 @@ export default function WelcomePage() {
           ))}
         </motion.div>
 
+        {/* Guest play note */}
+        {isGuest && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.75 }}
+            className="mt-3 text-[10px] text-purple-400/60"
+          >
+            No account needed — guest play works instantly
+          </motion.p>
+        )}
+
         {/* Auth links */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-4 flex items-center justify-center gap-3"
+          className="mt-3 flex items-center justify-center gap-3"
         >
           {isGuest ? (
-            <>
-              <button
-                onClick={() => router.push("/login")}
-                className="text-xs font-bold text-purple-500"
-              >
-                Parent Login
-              </button>
-              <span className="text-purple-300">|</span>
-              <button
-                onClick={() => router.push("/signup")}
-                className="text-xs font-bold text-purple-500"
-              >
-                Sign Up
-              </button>
-            </>
+            <button
+              onClick={() => router.push("/login")}
+              className="text-xs font-bold text-purple-500"
+            >
+              Parent Login
+            </button>
           ) : (
             <>
               <button

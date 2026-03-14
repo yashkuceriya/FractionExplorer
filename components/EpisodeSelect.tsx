@@ -43,21 +43,51 @@ export default function EpisodeSelect({ onSelect, onBack }: EpisodeSelectProps) 
         <h1 className="text-3xl font-extrabold bg-gradient-to-r from-[#F13EA1] to-[#844CA4] bg-clip-text text-transparent">
           Choose Your Lesson!
         </h1>
-        <p className="text-sm text-gray-500 mt-1">FractionLab Lessons</p>
+        <p className="text-sm text-gray-500 mt-1">{completedCount} of {CURRICULUM.length} episodes completed</p>
       </motion.div>
+
+      {/* Recommended episode — prominent card for first-timers */}
+      {currentEpisode <= CURRICULUM.length && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="max-w-md mx-auto mb-6"
+        >
+          <button
+            onClick={() => {
+              const ep = CURRICULUM.find((e) => e.id === currentEpisode);
+              if (ep) onSelect(ep);
+            }}
+            className="w-full text-left p-5 rounded-2xl bg-gradient-to-r from-[#F13EA1]/10 via-white to-[#844CA4]/10 ring-2 ring-[#F13EA1] shadow-lg shadow-[#F13EA1]/15 active:scale-[0.98] transition-transform"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">{CURRICULUM[currentEpisode - 1]?.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-[#F13EA1] uppercase tracking-wider mb-0.5">
+                  {completedCount === 0 ? "Start Here" : "Continue"}
+                </p>
+                <h3 className="text-base font-black text-gray-800 leading-tight">
+                  Ep {currentEpisode}: {CURRICULUM[currentEpisode - 1]?.title}
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {CURRICULUM[currentEpisode - 1]?.subtitle}
+                </p>
+              </div>
+              <span className="text-2xl text-[#F13EA1]">→</span>
+            </div>
+          </button>
+        </motion.div>
+      )}
 
       {/* Progress bar */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.1 }}
-        className="max-w-md mx-auto mb-8"
+        transition={{ delay: 0.15 }}
+        className="max-w-md mx-auto mb-6"
       >
-        <div className="flex items-center justify-between text-sm font-medium text-gray-600 mb-1.5">
-          <span>{completedCount} / {CURRICULUM.length} episodes completed</span>
-          <span>{Math.round((completedCount / CURRICULUM.length) * 100)}%</span>
-        </div>
-        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+        <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${(completedCount / CURRICULUM.length) * 100}%` }}
@@ -68,7 +98,7 @@ export default function EpisodeSelect({ onSelect, onBack }: EpisodeSelectProps) 
       </motion.div>
 
       {/* Episode grid */}
-      <div className="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
         {CURRICULUM.map((episode, index) => {
           const unlocked = isEpisodeUnlocked(episode.id);
           const completed = completedEpisodes.includes(episode.id);
@@ -83,9 +113,9 @@ export default function EpisodeSelect({ onSelect, onBack }: EpisodeSelectProps) 
               disabled={!unlocked}
               onClick={() => unlocked && onSelect(episode)}
               className={`
-                relative text-left rounded-2xl p-4 min-h-[120px]
+                relative text-left rounded-2xl p-4
                 transition-shadow duration-200
-                ${unlocked ? "cursor-pointer active:scale-[0.97]" : "cursor-not-allowed opacity-50"}
+                ${unlocked ? "cursor-pointer active:scale-[0.97]" : "cursor-not-allowed opacity-40"}
                 ${isCurrent
                   ? "bg-white ring-2 ring-[#F13EA1] shadow-lg shadow-[#F13EA1]/20"
                   : completed

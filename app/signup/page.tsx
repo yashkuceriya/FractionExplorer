@@ -53,16 +53,27 @@ export default function SignupPage() {
           className="bg-white rounded-3xl shadow-xl border-2 border-emerald-200 p-8 text-center max-w-sm"
         >
           <p className="text-4xl mb-3">🎉</p>
-          <h2 className="text-xl font-black text-emerald-700 mb-2">Account Created!</h2>
-          <p className="text-sm text-gray-600">
-            Check your email to confirm, then add your students.
+          <h2 className="text-xl font-black text-emerald-700 mb-2">Almost There!</h2>
+          <p className="text-sm text-gray-600 mb-1">
+            We sent a confirmation link to <span className="font-bold text-gray-800">{email}</span>.
           </p>
-          <button
-            onClick={() => router.push("/pick-student")}
-            className="mt-4 px-6 py-2 bg-emerald-500 text-white font-bold rounded-xl text-sm active:scale-95 transition-transform"
-          >
-            Continue
-          </button>
+          <p className="text-xs text-gray-400 mb-4">
+            Open the link in your email, then come back here and sign in.
+          </p>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => router.push("/login")}
+              className="px-6 py-3 bg-emerald-500 text-white font-bold rounded-xl text-sm active:scale-95 transition-transform"
+            >
+              Go to Sign In
+            </button>
+            <button
+              onClick={() => router.push("/")}
+              className="px-6 py-2 text-purple-500 font-bold text-xs active:scale-95 transition-transform"
+            >
+              Play as Guest for Now
+            </button>
+          </div>
         </motion.div>
       </div>
     );

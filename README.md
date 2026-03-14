@@ -1,85 +1,97 @@
-## FractionLab
+# FractionLab
 
-A conversational math tutor that teaches fraction equivalence through interactive digital manipulatives.
+**An AI-powered fraction tutor for kids ages 5-8 that teaches equivalence through hands-on digital manipulatives.**
 
-### What it is
+Kids split, merge, and compare colorful fraction blocks while a voice-guided tutor adapts to their every move — discovering on their own that 1/2 and 2/4 are secretly the same.
 
-- Web app where an AI tutor guides students through fraction equivalence (1/2 = 2/4, etc.)
-- Interactive fraction workspace: drag, split, merge, and compare fraction blocks
-- Conversational AI tutor that adapts to student actions (with scripted fallback when no API key)
-- Built for iPad Safari
+## What makes it special
 
-### How to run
+- **Hands-on discovery, not drilling** — Kids drag, split, and merge fraction blocks to discover equivalence visually, the way research says works best
+- **AI tutor with personality** — A kids' show host character that gets genuinely excited about fractions, adapts hints to struggles, and never makes a wrong answer feel bad
+- **Works without any API keys** — A full scripted tutor fallback means the complete experience runs with zero configuration. Add Anthropic/OpenAI keys for AI-powered responses, ElevenLabs for HD voices, Supabase for parent accounts — all optional
+- **18 guided episodes** — Structured curriculum from "what's a whole?" to adding fractions, with warmups, missions, boss challenges, and exit tickets
+- **iPad-first, touch-optimized** — 44px tap targets, portrait + landscape layouts, safe area support
+
+## Quick start
 
 ```bash
-git clone <repo>
+git clone https://github.com/yashkuceriya/FractionExplorer.git
 cd synthesis-tutor
 npm install
 npm run dev
 ```
 
-Open http://localhost:3002 in a browser (iPad Safari recommended).
+Open http://localhost:3002 — works on any browser, best on iPad Safari.
 
-### Environment variables
-
-Create `.env.local`:
+**No API keys needed.** The app runs fully with guest mode and scripted tutor. To enable optional services, create `.env.local`:
 
 ```
-# Optional — enables AI-powered tutor (falls back to scripted tutor without these)
-ANTHROPIC_API_KEY=your_key_here
-# Or use OpenAI instead:
-# OPENAI_API_KEY=your_key_here
+# AI-powered tutor (optional — scripted fallback works great)
+ANTHROPIC_API_KEY=your_key
 
-# Optional — enables parent accounts and progress sync
+# Parent accounts & cloud sync (optional — local storage works)
 NEXT_PUBLIC_SUPABASE_URL=your_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
 
-# Optional — higher quality character voices
+# HD character voices (optional — Web Speech API works)
 ELEVENLABS_API_KEY=your_key
-
-# Optional — LLM cost tracking and observability
-LANGSMITH_API_KEY=your_key
-LANGSMITH_PROJECT=synthesis-tutor
-LANGSMITH_ENDPOINT=https://api.smith.langchain.com
 ```
 
-### Technical approach
+## What works in guest mode (no setup)
 
-- **Framework**: Next.js 16 (App Router) with React 19, TypeScript, Tailwind CSS 4
-- **Tutor**: Anthropic Claude via Vercel AI SDK (`ai` + `@ai-sdk/anthropic`) with streaming responses. Falls back to a deterministic scripted tutor when no API key is configured — the app is fully functional either way.
-- **Manipulative**: Custom SVG-based fraction blocks with drag-and-drop (@dnd-kit), split/merge/compare operations. Visual equivalence discovery through a "comparison zone" where students test if two fractions are equal.
-- **Lesson flow**: Guided episodes (warmup -> missions -> boss -> exit ticket) teach fraction concepts progressively. Free-play workspace available for open exploration.
-- **Voice**: Web Speech API text-to-speech with character voices. Optional ElevenLabs integration for higher quality.
-- **iPad support**: Touch-optimized with 44px minimum tap targets, responsive portrait/landscape layouts, pinch-zoom enabled.
-- **Observability**: Optional LangSmith tracing for LLM cost tracking and prompt debugging.
+- Full 18-episode curriculum with warmups, missions, bosses, exit tickets
+- Scripted tutor with warm, context-aware responses
+- Voice narration (Web Speech API)
+- XP, levels, badges, streak tracking (localStorage)
+- All fraction manipulatives: drag, split, merge, compare
+- Free-play exploration mode with fraction workspace
+- Celebration animations, Swiper challenges, trophy wall
 
-### Demo path (1-2 minutes)
+## Demo path (90 seconds)
 
-1. Open app, tap "Let's Go!"
-2. Select Episode 1 "Fair Shares"
-3. Split a cookie bar in half (partition tool)
-4. Color your piece (shade 1 of 2)
-5. Cut a pizza into 4 slices
-6. Color your slice (shade 1 of 4)
-7. Boss: split a cake into 6 pieces
-8. Switch to "Explore" tab, drag fraction blocks into comparison boxes
-9. Discover that 1/2 = 2/4 (celebration animation)
-10. Split 1/2 into 2/4 using the smash tool
+1. **Landing page** — Tap "Start First Lesson"
+2. **Episode select** — The recommended episode card is highlighted, tap it
+3. **Episode 1: Fair Shares** — Tutor introduces sharing, first mission appears
+4. **Split a cookie bar** into 2 equal pieces (partition tool)
+5. **Color your half** — Shade 1 of 2 pieces
+6. **Cut pizza into 4 slices**, color 1 slice
+7. **Boss challenge** — Split a cake into 6 pieces
+8. **Switch to "Explore" tab** — Drag fraction blocks into comparison boxes
+9. **Discover 1/2 = 2/4** — Full celebration animation fires
+10. **Smash 2/4** into 1/4 + 1/4 — See equivalence visually
 
-### Project structure
+**Key moments to highlight:** The tutor reacting to correct/wrong answers, the equivalence celebration, split/merge mechanics, the completion screen with badges.
+
+## Technical stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
+| AI Tutor | Anthropic Claude via Vercel AI SDK (streaming) + scripted fallback |
+| Manipulatives | Custom SVG fraction blocks with @dnd-kit drag-and-drop |
+| Voice | Web Speech API + optional ElevenLabs HD voices |
+| Auth | Supabase (optional) with parent/student PIN system |
+| Curriculum | 18 episodes, Common Core aligned (grades 2-4) |
+| Progress | XP/level/badge/streak system, MTSS mastery tracking |
+
+## Project structure
 
 ```
 app/
-  lesson/page.tsx     — Main lesson page (tutor + workspace)
-  api/tutor/route.ts  — Tutor API (AI + scripted fallback)
-  page.tsx            — Welcome screen
+  page.tsx              — Welcome screen with two entry paths
+  lesson/page.tsx       — Main lesson page (tutor + workspace)
+  api/tutor/route.ts    — AI tutor API with scripted fallback
+  signup/page.tsx       — Parent registration
 components/
-  manipulative/       — Fraction blocks, workspace, comparison zone
-  chat/               — Chat panel, message bubbles, input
-  voice/              — Text-to-speech narrator
+  manipulative/         — Fraction blocks, workspace, episode player
+  chat/                 — Chat panel, message bubbles, tutor avatar
+  feedback/             — Celebrations, badges, XP bar, missions
+  voice/                — Text-to-speech narrator, character picker
 lib/
-  ai/                 — System prompt, scripted tutor fallback
-  curriculum.ts       — Episode/mission definitions
-  fractions.ts        — Fraction math utilities
-  progress.ts         — XP and progression system
+  ai/                   — System prompt, scripted tutor, lesson context
+  curriculum.ts         — 18 episode definitions with missions
+  fractions.ts          — Fraction math + color utilities
+  progress.ts           — XP, levels, streaks, daily goals
+  mastery.ts            — Per-skill MTSS mastery tracking
+  badges.ts             — 8 achievement badges with unlock logic
 ```
