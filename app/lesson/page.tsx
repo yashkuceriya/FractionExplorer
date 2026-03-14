@@ -426,7 +426,7 @@ export default function LessonPage() {
       } else if (selectedEpisode) {
         if (selectedEpisode.id <= 2) {
           // Early episodes: teach the concept FIRST before any tasks
-          content = `[Student started Episode ${selectedEpisode.id}: "${selectedEpisode.title}". This kid has NEVER heard of fractions. Do NOT say "1/2" or any fraction yet! Start with Step 1: what is a WHOLE? Use a cookie or pizza — "See this? It's one WHOLE cookie. The whole thing!" Then ask what happens if two friends want to share. Build up slowly from whole → sharing → pieces → naming pieces. Keep it to 1-2 sentences. Wait for their response before teaching more.]`;
+          content = `[New student, Episode 1. Say hi and ask: "Imagine you have one big cookie — the WHOLE thing. What would you do if your friend wanted some?" Nothing else. No fractions. No numbers. Just that question.]`;
         } else {
           content = `[Student started Episode ${selectedEpisode.id}: "${selectedEpisode.title}". Skills: ${selectedEpisode.skills.join(", ")}. Begin with the warmup!]`;
         }
@@ -905,13 +905,13 @@ export default function LessonPage() {
         </div>
       ) : (
         <>
-          {/* Journey strip — Dora-style adventure stops */}
-          <div className="landscape-thin flex items-center gap-2 px-3 py-0.5">
+          {/* Journey strip — hidden in landscape to save vertical space */}
+          <div className="landscape-hide landscape-ipad-hide flex items-center gap-2 px-3 py-0.5">
             <div className="flex-1 min-w-0">
               <JourneyStrip activeIndex={journeyIndex} />
             </div>
           </div>
-          <div className="landscape-hide px-3 py-0.5">
+          <div className="landscape-hide landscape-ipad-hide px-3 py-0.5">
             <XPBar
               xp={playerProgress.xp}
               level={playerProgress.level}
@@ -920,25 +920,27 @@ export default function LessonPage() {
             />
           </div>
 
-          {/* Active mission — hidden in landscape to save space */}
-          <div className="px-3 py-0.5 landscape-hide">
-            <MissionCard
-              challenge={currentMission}
-              solved={missionSolved}
-              onSkip={() => {
-                setMissionSolved(false);
-                setCurrentMission(generateChallengeWithReview(playerProgress.level, difficulty, Object.values(loadMastery().skills).filter(s => s.status === "mastered").map(s => s.skill)));
-              }}
-              onSolve={(challenge) => {
-                setMissionSolved(true);
-                awardXP(challenge.xpReward, "Mission complete!");
-                setTimeout(() => {
+          {/* Active mission — only in Free Play mode, hidden in landscape */}
+          {!episodeMode && (
+            <div className="px-3 py-0.5 landscape-hide">
+              <MissionCard
+                challenge={currentMission}
+                solved={missionSolved}
+                onSkip={() => {
                   setMissionSolved(false);
                   setCurrentMission(generateChallengeWithReview(playerProgress.level, difficulty, Object.values(loadMastery().skills).filter(s => s.status === "mastered").map(s => s.skill)));
-                }, 2500);
-              }}
-            />
-          </div>
+                }}
+                onSolve={(challenge) => {
+                  setMissionSolved(true);
+                  awardXP(challenge.xpReward, "Mission complete!");
+                  setTimeout(() => {
+                    setMissionSolved(false);
+                    setCurrentMission(generateChallengeWithReview(playerProgress.level, difficulty, Object.values(loadMastery().skills).filter(s => s.status === "mastered").map(s => s.skill)));
+                  }, 2500);
+                }}
+              />
+            </div>
+          )}
 
           {/* API error banner */}
           {apiError && (

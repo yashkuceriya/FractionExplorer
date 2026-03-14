@@ -134,7 +134,7 @@ export async function POST(req: Request) {
     system: systemPrompt,
     messages: trimmedMessages,
     temperature: 0.85,
-    maxTokens: 300,
+    maxTokens: 120,
     onFinish: async ({ text, usage }) => {
       // Track token usage
       const promptTokens = usage?.promptTokens || 0;
