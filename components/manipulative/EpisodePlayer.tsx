@@ -289,7 +289,7 @@ export default function EpisodePlayer({
       </div>
 
       {/* Manipulative area */}
-      <div className="flex-1 flex items-center justify-center px-3 pb-2 min-h-0">
+      <div className="flex-1 flex flex-col items-center justify-center px-3 pb-2 min-h-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={`${phase}-${missionIndex}`}
@@ -313,6 +313,15 @@ export default function EpisodePlayer({
             })}
           </motion.div>
         </AnimatePresence>
+
+        {/* Tap instruction for shade/build missions */}
+        {(currentMission.type === "shade-fraction" || currentMission.type === "build-from-units") && !showCorrect && (
+          <p className="text-xs font-bold text-pink-400 mt-1 animate-pulse">
+            👆 {shadedSegments.filter(Boolean).length === 0
+              ? "Tap the pieces to color them!"
+              : `${shadedSegments.filter(Boolean).length} out of ${currentMission.fraction.d} colored. Tap one to color it.`}
+          </p>
+        )}
       </div>
 
       {/* Hint area */}
@@ -403,6 +412,40 @@ function renderManipulative(
     );
   }
 
+  // shade-fraction and build-from-units need tappable segments regardless of manipulative type
+  if (mission.type === "shade-fraction" || mission.type === "build-from-units") {
+    const shape = mission.manipulative === "circle" ? "circle" : "rectangle";
+    if (shape === "circle") {
+      return (
+        <FractionCircle
+          denominator={mission.fraction.d}
+          shadedSegments={shadedSegments}
+          onToggleSegment={(i) => {
+            const next = [...shadedSegments];
+            next[i] = !next[i];
+            setShadedSegments(next);
+          }}
+          size={200}
+          showLabel
+        />
+      );
+    }
+    return (
+      <PartitionTool
+        shape="rectangle"
+        denominator={mission.fraction.d}
+        shadedSegments={shadedSegments}
+        onToggleSegment={(i) => {
+          const next = [...shadedSegments];
+          next[i] = !next[i];
+          setShadedSegments(next);
+        }}
+        size={260}
+        showControls={false}
+      />
+    );
+  }
+
   switch (mission.manipulative) {
     case "circle":
       return (
@@ -478,7 +521,7 @@ function renderManipulative(
         );
       }
 
-      // Default: single fraction bar display
+      // Default: single fraction bar display (for identify, compare, etc.)
       return (
         <div className="flex flex-col items-center gap-3">
           <FractionBar
