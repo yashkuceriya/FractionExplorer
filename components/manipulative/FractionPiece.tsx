@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, memo } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
@@ -19,7 +19,7 @@ interface FractionPieceProps {
   isEquivalentShimmer?: boolean;
 }
 
-export default function FractionPiece({
+export default memo(function FractionPiece({
   id,
   numerator,
   denominator,
@@ -146,4 +146,4 @@ export default function FractionPiece({
       </div>
     </div>
   );
-}
+})

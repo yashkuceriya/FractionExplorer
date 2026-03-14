@@ -29,7 +29,7 @@ export const UNIQUE_FRACTION_COLORS: Record<string, string> = {
   "5/10": "#fb7185",  // coral
   "6/12": "#f87171",  // light red
   // Thirds family
-  "1/3": "#3b82f6",   // blue
+  "1/3": "#2563eb",   // royal blue
   "2/6": "#0ea5e9",   // sky
   "3/9": "#38bdf8",   // light sky
   "4/12": "#60a5fa",  // soft blue
@@ -38,9 +38,9 @@ export const UNIQUE_FRACTION_COLORS: Record<string, string> = {
   "2/8": "#a855f7",   // violet
   "3/12": "#c084fc",  // light violet
   // Two-thirds family
-  "2/3": "#2563eb",   // royal blue
-  "4/6": "#1d4ed8",   // navy
-  "6/9": "#3b82f6",   // bright blue
+  "2/3": "#1d4ed8",   // navy blue
+  "4/6": "#4338ca",   // indigo
+  "6/9": "#6366f1",   // bright indigo
   "8/12": "#1e40af",  // deep navy
   // Three-fourths family
   "3/4": "#7c3aed",   // deep purple

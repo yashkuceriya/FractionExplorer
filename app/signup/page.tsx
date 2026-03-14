@@ -18,8 +18,8 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
     if (password !== confirm) {
@@ -42,9 +42,6 @@ export default function SignupPage() {
 
     setSuccess(true);
     setLoading(false);
-
-    // Auto-redirect after signup (Supabase may auto-confirm in dev)
-    setTimeout(() => router.push("/pick-student"), 1500);
   }
 
   if (success) {
@@ -111,7 +108,7 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-sm bg-pink-50/50"
-                placeholder="At least 6 characters"
+                placeholder="At least 8 characters"
               />
             </div>
 

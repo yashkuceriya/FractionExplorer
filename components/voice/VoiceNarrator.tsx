@@ -190,8 +190,8 @@ export default function VoiceNarrator({
           body: JSON.stringify({ text: cleanMessage, voiceId }),
         });
 
-        if (res.status === 501) {
-          // No ElevenLabs key configured — remember and skip in future
+        if (res.status === 501 || res.status === 403 || res.status === 429) {
+          // No key, invalid key, or rate-limited — skip ElevenLabs in future
           elevenLabsAvailable.current = false;
           return false;
         }

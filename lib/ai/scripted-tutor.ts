@@ -13,26 +13,27 @@ function pick<T>(arr: T[]): T {
 // ─── Response pools ─────────────────────────────────────────────────
 
 const CORRECT_RESPONSES = [
-  "YES! You nailed it!",
-  "Boom! That's exactly right!",
-  "Look at you go! Perfect!",
-  "Woohoo! You're on fire!",
-  "That's it! You're SO smart!",
-  "High five! You crushed it!",
-  "Oh wow, you got it! I knew you would!",
-  "YESSS! Do a happy dance!",
-  "You're a fraction superstar!",
-  "Incredible! That was perfect!",
+  "YES! Wait— did you just— YOU DID!",
+  "WHOA WHOA WHOA. That's right! How did you know?!",
+  "Okay okay okay I'm not gonna freak out but... THAT WAS PERFECT!",
+  "Hold on. Hold ON. You just nailed it! Are you a wizard?!",
+  "That's it! I KNEW you'd get it! I believed in you the whole time!",
+  "High five! ...okay I can't high five I'm in an app but STILL!",
+  "Oh wow you got it! I didn't even help! ...okay I helped a little.",
+  "YESSS! You should do a victory dance right now. I'll wait.",
+  "You are seriously SO good at this! Like, suspiciously good!",
+  "Wait WHAT?! That was perfect! Are you secretly a math teacher?!",
 ];
 
 const WRONG_RESPONSES = [
-  "Ooh, not quite — but you're SO close! Try again!",
-  "Hmm, almost! Give it one more shot!",
-  "That's tricky! Look carefully and try again.",
-  "Not that one — but I love that you tried! Go again!",
-  "Close! Take another look at the pieces.",
-  "Oopsie! No worries, try a different one!",
-  "Tricky tricky! You'll get it — try again!",
+  "Ooh! Not quite — but don't worry, these are sneaky! Try again!",
+  "Hmm, almost! That one's tricky. Give it one more shot!",
+  "Oh that's a tricky one! Look real carefully and try again.",
+  "Not that one — but I LOVE that you tried! Go again go again!",
+  "Close! Take another look at the pieces. Count them!",
+  "Oopsie! No worries, even I get confused sometimes! Try again!",
+  "Tricky tricky! These fractions are being sneaky! You'll get it!",
+  "Hmm, nope! But hey — wrong answers are how we learn! Try another!",
 ];
 
 const HINT_RESPONSES_SHADE = [
@@ -60,21 +61,23 @@ const HINT_RESPONSES_GENERIC = [
 ];
 
 const ENCOURAGE_RESPONSES = [
-  "You can do it! Take your time!",
-  "I'm right here with you — give it a try!",
-  "You're doing great! What do you think?",
-  "Go for it! There's no wrong way to explore!",
-  "Hmm, what do you notice about the pieces?",
-  "Let's figure this out together!",
-  "Take a look — what do you see?",
+  "You can do it! Take your time, I'll wait right here!",
+  "I'm right here with you! Give it a try — what's the worst that can happen?",
+  "You're doing SO great! What do you think?",
+  "Go for it! There's no wrong way to explore! ...well okay there ARE wrong answers but that's fine!",
+  "Hmm, what do you notice about the pieces? Look real carefully!",
+  "Let's figure this out together! I'll be your sidekick!",
+  "Take a look — what do you see? I see something interesting...",
+  "Hey hey hey! You've got this! I believe in you!",
 ];
 
 const MATCH_FOUND = [
-  "WHOA! You found a secret twin! {left} and {right} are the same!",
-  "Wait — {left} and {right} are TWINS?! You discovered it!",
-  "Mind. Blown. {left} equals {right}! You're a detective!",
-  "YES! {left} and {right} — same amount, different pieces! So cool!",
-  "You cracked the code! {left} = {right}!",
+  "WHOA! Wait wait wait— {left} and {right} are the SAME?! You found it!",
+  "Hold on— {left} and {right} are SECRET TWINS?! That's wild! You discovered it!",
+  "Mind. Blown. {left} equals {right}! They look different but they're the same amount! WHAT!",
+  "YES! {left} and {right} — different pieces, same amount! It's like magic but it's MATH!",
+  "You cracked the code! {left} = {right}! You're basically a fraction detective!",
+  "Okay I'm not gonna lie, {left} and {right} being the same still blows MY mind!",
 ];
 
 const NO_MATCH = [
@@ -106,16 +109,18 @@ const PRACTICE_PROMPTS = [
 ];
 
 const WELCOME_MESSAGES = [
-  "Hey there! Ready to explore fractions? Let's go!",
-  "Welcome! Today we're going to discover something really cool about fractions!",
-  "Hi! Let's play with fractions together — it's going to be fun!",
+  "Oh hi! Today we're gonna explore fractions! ...wait, don't leave, I promise it's actually really fun!",
+  "HEY! You're here! Okay okay okay — today we're gonna discover something WILD about fractions!",
+  "Welcome welcome welcome! Ready to play with fractions? Trust me, it's way cooler than it sounds!",
+  "Oh hi everybody! ...I mean, oh hi YOU! Let's do some fraction stuff — it's gonna be awesome!",
 ];
 
 const CELEBRATION_MESSAGES = [
-  "You did it! You're officially a fraction expert!",
-  "WOW! Look how much you learned today! I'm so proud!",
-  "You crushed it! Fractions have no secrets from you now!",
-  "Amazing work today! You should feel really proud!",
+  "You did it! You're officially a fraction expert! I can't believe— actually yes I can, you're amazing!",
+  "WOW! Look how much you learned today! I'm actually getting emotional! ...okay I'm fine. But STILL!",
+  "You crushed it! Fractions have NO secrets from you now! None! Zero! ...which is also a number!",
+  "Okay that was SO good! You should feel really proud! I'm proud and I'm just an app character!",
+  "That's all the time we have today but WOW what a session! Come back soon, okay?!",
 ];
 
 // ─── Mission-aware hint selection ───────────────────────────────────
@@ -170,10 +175,10 @@ export function getScriptedResponse(
         return pick(["I'm here to help! " + getHintForMission(ws.currentMissionPrompt || ""), "No worries! Let me help — " + getHintForMission(ws.currentMissionPrompt || "")]);
       }
       if (lower.includes("yay") || lower.includes("yes") || lower.includes("cool") || lower.includes("!")) {
-        return pick(["Right?! This is so fun!", "I know, right?! You're doing amazing!", "Wooo! Let's keep going!"]);
+        return pick(["RIGHT?! This is so fun! I'm having the best time!", "I KNOW! You're doing amazing! Keep going keep going!", "Wooo! I love your energy! Let's keep going!"]);
       }
       if (lower.includes("?")) {
-        return pick(["Great question! Look at the pieces carefully — what do you notice?", "Hmm, let's figure it out! What do you see?", "I love that you're thinking! Try it and see what happens!"]);
+        return pick(["Ooh good question! Look at the pieces carefully — what do you notice?", "Hmm, let's figure it out together! What do you see?", "I love that you're asking that! Try it and see what happens!"]);
       }
     }
     return pick(ENCOURAGE_RESPONSES);

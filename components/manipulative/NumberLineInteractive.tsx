@@ -89,7 +89,7 @@ export default function NumberLineInteractive({
       const snapped = Math.round(rawValue / step) * step;
       const clamped = Math.max(0, Math.min(maxValue, snapped));
 
-      const numerator = Math.round(clamped * denominator);
+      const numerator = Math.min(Math.round(clamped * denominator), maxValue * denominator);
       onPlace({ numerator, denominator });
     },
     [onPlace, denominator, maxValue, lineLength]

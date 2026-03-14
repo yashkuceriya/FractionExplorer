@@ -166,7 +166,7 @@ export default function WelcomePage() {
           onClick={() => router.push("/lesson")}
           className="px-14 py-4 bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 text-white text-xl font-black rounded-2xl shadow-xl shadow-pink-400/40 active:shadow-md transition-shadow border-2 border-pink-300/50 tracking-wide"
         >
-          {isReturning ? "Let's GO!" : "Let's Go!"}
+          Let&apos;s Go!
         </motion.button>
 
         {/* Feature badges */}

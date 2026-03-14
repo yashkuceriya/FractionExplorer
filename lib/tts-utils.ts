@@ -23,6 +23,7 @@ const SPOKEN_DENOMINATORS: Record<string, string> = {
   "8": "eighth",
   "9": "ninth",
   "10": "tenth",
+  "11": "eleventh",
   "12": "twelfth",
 };
 
@@ -36,6 +37,7 @@ const SPOKEN_DENOMINATORS_PLURAL: Record<string, string> = {
   "8": "eighths",
   "9": "ninths",
   "10": "tenths",
+  "11": "elevenths",
   "12": "twelfths",
 };
 

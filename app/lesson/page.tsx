@@ -198,6 +198,15 @@ export default function LessonPage() {
     setCurrentMission(generateChallengeWithReview(loadProgress().level, difficulty, Object.values(loadMastery().skills).filter(s => s.status === "mastered").map(s => s.skill)));
   }, []);
 
+  // Cleanup all timer refs on unmount
+  useEffect(() => {
+    return () => {
+      if (highlightTimer.current) clearTimeout(highlightTimer.current);
+      if (gameEventTimer.current) clearTimeout(gameEventTimer.current);
+      if (systemEventTimer.current) clearTimeout(systemEventTimer.current);
+    };
+  }, []);
+
   // Start/stop background music based on toggle
   useEffect(() => {
     if (!bgMusicMuted) {

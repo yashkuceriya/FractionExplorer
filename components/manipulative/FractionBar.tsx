@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo } from "react";
+
 interface FractionBarProps {
   numerator: number;
   denominator: number;
@@ -9,7 +11,6 @@ interface FractionBarProps {
   showLabel?: boolean;
   onClick?: () => void;
   interactive?: boolean;
-  showCrackPreview?: boolean;
 }
 
 /** Darken a hex color */
@@ -45,8 +46,8 @@ export default function FractionBar({
   const gap = 2;
   const cornerRadius = 5;
   const segmentWidth = (width - gap * (denominator - 1)) / denominator;
-  const darkColor = darken(color, 0.15);
-  const lightColor = lighten(color, 0.25);
+  const darkColor = useMemo(() => darken(color, 0.15), [color]);
+  const lightColor = useMemo(() => lighten(color, 0.25), [color]);
   // Stable gradient ID based on fraction values
   const gradientId = `seg-${numerator}-${denominator}`;
 

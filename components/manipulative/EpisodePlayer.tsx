@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FractionCircle from "./FractionCircle";
 import PartitionTool from "./PartitionTool";
@@ -66,6 +66,7 @@ export default function EpisodePlayer({
   const [attempts, setAttempts] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [showCorrect, setShowCorrect] = useState(false);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Interaction state
   const [shadedSegments, setShadedSegments] = useState<boolean[]>([]);
@@ -224,7 +225,8 @@ export default function EpisodePlayer({
       setTotalXP((t) => t + xp);
       onMissionComplete(currentMission, true, hintUsed);
       onTutorEvent(`[Student completed ${phase} mission correctly! ${hintUsed ? "Used hints." : "No hints needed!"} +${xp} XP. Celebrate with "WE DID IT!" energy!]`);
-      setTimeout(() => advanceToNext(), 1500);
+      const t = setTimeout(() => advanceToNext(), 1500);
+      timersRef.current.push(t);
     } else {
       const newAttempts = attempts + 1;
       if (newAttempts >= (currentMission.hints.length > 0 ? 2 : 3)) {
@@ -251,6 +253,13 @@ export default function EpisodePlayer({
       onMissionChange?.(currentMission.prompt);
     }
   }, [currentMission, resetInteraction]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach(clearTimeout);
+    };
+  }, []);
 
   if (phase === "complete") {
     return (

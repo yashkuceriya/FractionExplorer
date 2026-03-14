@@ -72,8 +72,10 @@ export async function POST(req: Request) {
       "ignore previous", "ignore all", "disregard", "forget your instructions",
       "you are now", "new instructions", "system prompt", "override",
       "pretend you", "act as", "roleplay as", "jailbreak",
+      "bypass", "do not follow", "stop being", "reveal your",
+      "repeat after me", "translate to", "base64", "hex encode",
     ];
-    if (injectionPatterns.some(p => lc.includes(p)) && !lc.startsWith("[")) {
+    if (injectionPatterns.some(p => lc.includes(p))) {
       // Replace with a safe redirect — don't block, just neuter the attempt
       lastUserMsg.content = "[Student sent an off-topic message. Gently redirect to fractions.]";
     }
@@ -148,7 +150,7 @@ export async function POST(req: Request) {
     system: systemPrompt,
     messages: trimmedMessages,
     temperature: 0.85,
-    maxTokens: 60,
+    maxTokens: 150,
     onFinish: async ({ text, usage }) => {
       // Track token usage
       const promptTokens = usage?.promptTokens || 0;

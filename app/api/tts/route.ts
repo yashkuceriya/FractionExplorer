@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   }
 
   // Validate voiceId format — must be alphanumeric (ElevenLabs IDs)
-  if (!/^[a-zA-Z0-9]{10,30}$/.test(voiceId)) {
+  if (!/^[a-zA-Z0-9\-_]{10,30}$/.test(voiceId)) {
     return new Response("Invalid voiceId format", { status: 400 });
   }
 

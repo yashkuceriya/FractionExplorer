@@ -185,6 +185,15 @@ button, a, input, [data-no-drag] {
   animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Respect reduced-motion preferences (accessibility + battery) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ── Landscape helpers — only for phone landscape, NOT iPad ── */
 @media (orientation: landscape) and (max-height: 500px) {
   .landscape-compact { padding-top: 1px !important; padding-bottom: 1px !important; }

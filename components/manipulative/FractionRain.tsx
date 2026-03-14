@@ -326,7 +326,13 @@ export default function FractionRain({ onXP }: FractionRainProps) {
     setSlowMoCount((c) => c - 1);
     setSlowMo(true);
     playRainPowerUp();
-    setBlocks((prev) => prev.map((b) => ({ ...b, speed: b.speed * 2, startTime: Date.now() - ((Date.now() - b.startTime) * 2) })));
+    setBlocks((prev) => prev.map((b) => {
+      const elapsed = Date.now() - b.startTime;
+      const newSpeed = b.speed * 2;
+      // Preserve current visual position: elapsed/oldSpeed = newElapsed/newSpeed
+      const newStartTime = Date.now() - (elapsed / b.speed) * newSpeed;
+      return { ...b, speed: newSpeed, startTime: newStartTime };
+    }));
     setTimeout(() => {
       setSlowMo(false);
       setBlocks((prev) => prev.map((b) => ({ ...b, speed: b.speed / 2 })));

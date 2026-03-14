@@ -35,14 +35,18 @@ export async function POST(req: Request) {
 
   // Whitelist allowed fields to prevent arbitrary column writes
   const allowed: Record<string, unknown> = {};
-  const SAFE_KEYS = [
-    "xp", "level", "mastery_level", "unlocked_modes",
-    "daily_xp", "daily_goal", "last_session_date",
-    "consecutive_days", "lifetime_matches", "lifetime_smashes",
-    "lifetime_merges", "discovered_equivalences",
-  ];
-  for (const key of SAFE_KEYS) {
-    if (key in progress) allowed[key] = progress[key];
+  const SAFE_KEYS: Record<string, string> = {
+    xp: "number", level: "number", mastery_level: "number",
+    unlocked_modes: "object", // array
+    daily_xp: "number", daily_goal: "number",
+    last_session_date: "string", consecutive_days: "number",
+    lifetime_matches: "number", lifetime_smashes: "number",
+    lifetime_merges: "number", discovered_equivalences: "object", // array
+  };
+  for (const [key, expectedType] of Object.entries(SAFE_KEYS)) {
+    if (key in progress && typeof progress[key] === expectedType) {
+      allowed[key] = progress[key];
+    }
   }
 
   const { error } = await supabase
