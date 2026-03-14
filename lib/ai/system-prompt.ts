@@ -185,55 +185,62 @@ export function buildContextMessage(workspaceState: {
   difficulty?: string;
   studentName?: string;
   misconceptionContext?: string;
+  episodeMode?: boolean;
+  currentMissionPrompt?: string;
   currentEpisode?: string | { id: number; title: string; skills?: string[]; missionIndex?: number; totalMissions?: number };
 }) {
   const parts: string[] = [];
 
   if (workspaceState.studentName) {
-    // Sanitize student name to prevent prompt injection
     const safeName = String(workspaceState.studentName).replace(/[\[\]\n\r]/g, "").slice(0, 30);
     parts.push(`[Student name: ${safeName}]`);
   }
 
-  const phase = workspaceState.lessonPhase || "intro";
-  parts.push(`[Phase: ${phase}, step ${workspaceState.lessonStep}/${workspaceState.totalSteps}, matches: ${workspaceState.completedChallenges || 0}]`);
-
   if (workspaceState.playerLevel !== undefined) {
-    parts.push(`[Level ${workspaceState.playerLevel}, XP today: ${workspaceState.dailyXP ?? 0}/${workspaceState.dailyGoal ?? 20}]`);
+    parts.push(`[Level ${workspaceState.playerLevel}]`);
   }
 
   if (workspaceState.difficulty) {
     const tips: Record<string, string> = {
-      beginner: "Beginner mode (ages 4-6). Simple words, real-world examples only. Halves, thirds, quarters. Be extra patient.",
-      intermediate: "Intermediate mode. They know basics. Push discovery. Hint after 2 wrong tries.",
-      expert: "Expert mode. Challenge them. Bigger denominators. Hint after 3 wrong tries.",
+      beginner: "Beginner mode (ages 4-6). Simple words, real-world examples only. Be extra patient.",
+      intermediate: "Intermediate mode. They know basics. Push discovery.",
+      expert: "Expert mode. Challenge them. Bigger denominators.",
     };
     parts.push(`[${tips[workspaceState.difficulty] ?? ""}]`);
   }
 
-  if (workspaceState.comparisonLeft && workspaceState.comparisonRight) {
-    parts.push(`[Comparing: ${workspaceState.comparisonLeft} vs ${workspaceState.comparisonRight}]`);
-
-    const history = workspaceState.matchHistory ?? [];
-    const lastMatch = history[history.length - 1];
-    if (lastMatch) {
-      parts.push(lastMatch.equal
-        ? `[They match! Celebrate warmly — credit the kid.]`
-        : `[Not a match. Be gentle — "interesting, those are different sizes" or "good try, maybe another one?"]`
-      );
-    }
-  } else if (workspaceState.comparisonLeft || workspaceState.comparisonRight) {
-    parts.push(`[One box filled (${workspaceState.comparisonLeft || workspaceState.comparisonRight}), other empty. Encourage them to fill the other side.]`);
+  // Episode mode: tutor should talk about the current mission, NOT the free-play workspace
+  if (workspaceState.episodeMode && workspaceState.currentMissionPrompt) {
+    parts.push(`[EPISODE MODE — Student is doing a guided mission. The mission says: "${workspaceState.currentMissionPrompt}"]`);
+    parts.push(`[Talk about THIS mission. Do NOT mention dragging blocks, comparison boxes, or the free-play workspace. Help with the mission on screen.]`);
   } else {
-    parts.push(`[Both boxes empty. Guide them to grab a fraction block and drop it in.]`);
-  }
+    // Free play mode — comparison zone context
+    const phase = workspaceState.lessonPhase || "intro";
+    parts.push(`[Free play mode, phase: ${phase}, matches: ${workspaceState.completedChallenges || 0}]`);
 
-  if (workspaceState.matchHistory && workspaceState.matchHistory.length > 0) {
-    const recent = workspaceState.matchHistory.slice(-5);
-    const historyStr = recent
-      .map((m) => `${m.left} vs ${m.right} → ${m.equal ? "match" : "different"}`)
-      .join(", ");
-    parts.push(`[Recent: ${historyStr}]`);
+    if (workspaceState.comparisonLeft && workspaceState.comparisonRight) {
+      parts.push(`[Comparing: ${workspaceState.comparisonLeft} vs ${workspaceState.comparisonRight}]`);
+      const history = workspaceState.matchHistory ?? [];
+      const lastMatch = history[history.length - 1];
+      if (lastMatch) {
+        parts.push(lastMatch.equal
+          ? `[They match! Celebrate!]`
+          : `[Not a match. Be gentle.]`
+        );
+      }
+    } else if (workspaceState.comparisonLeft || workspaceState.comparisonRight) {
+      parts.push(`[One box filled (${workspaceState.comparisonLeft || workspaceState.comparisonRight}), other empty.]`);
+    } else {
+      parts.push(`[Both boxes empty. Guide them to grab a fraction block and drop it in.]`);
+    }
+
+    if (workspaceState.matchHistory && workspaceState.matchHistory.length > 0) {
+      const recent = workspaceState.matchHistory.slice(-5);
+      const historyStr = recent
+        .map((m) => `${m.left} vs ${m.right} → ${m.equal ? "match" : "different"}`)
+        .join(", ");
+      parts.push(`[Recent: ${historyStr}]`);
+    }
   }
 
   if (workspaceState.misconceptionContext) {

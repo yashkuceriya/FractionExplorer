@@ -176,6 +176,7 @@ export default function LessonPage() {
 
   // Episode mode: true = structured curriculum (EpisodePlayer), false = free-play workspace
   const [episodeMode, setEpisodeMode] = useState(true);
+  const [currentMissionPrompt, setCurrentMissionPrompt] = useState("");
 
   // Journey strip — map lesson phase to stop index
   const PHASE_TO_JOURNEY: Record<string, number> = {
@@ -254,6 +255,8 @@ export default function LessonPage() {
       difficulty,
       studentName: student?.name,
       misconceptionContext: getMisconceptionContext() || undefined,
+      episodeMode: episodeMode && !!selectedEpisode,
+      currentMissionPrompt: episodeMode && selectedEpisode ? currentMissionPrompt : undefined,
       currentEpisode: selectedEpisode ? {
         id: selectedEpisode.id,
         title: selectedEpisode.title,
@@ -262,7 +265,7 @@ export default function LessonPage() {
         totalMissions: selectedEpisode.missions.length,
       } : undefined,
     },
-  }), [comparisonLeft, comparisonRight, lessonState, matchHistory, consecutiveFailures, playerProgress, difficulty, student, selectedEpisode]);
+  }), [comparisonLeft, comparisonRight, lessonState, matchHistory, consecutiveFailures, playerProgress, difficulty, student, selectedEpisode, episodeMode, currentMissionPrompt]);
 
   const { messages, append, setMessages, isLoading } = useChat({
     api: "/api/tutor",
@@ -1022,6 +1025,7 @@ export default function LessonPage() {
                       completeEpisode(selectedEpisode.id);
                       setTimeout(() => setShowCompletion(true), 1000);
                     }}
+                    onMissionChange={(prompt) => setCurrentMissionPrompt(prompt)}
                     onTutorEvent={(event) => {
                       batchSystemEvent(event);
                     }}

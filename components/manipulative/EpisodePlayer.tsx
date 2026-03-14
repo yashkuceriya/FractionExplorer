@@ -49,6 +49,7 @@ interface EpisodePlayerProps {
   onMissionComplete: (mission: EpisodeMission, correct: boolean, hintUsed: boolean) => void;
   onEpisodeComplete: (xpEarned: number) => void;
   onTutorEvent: (event: string) => void;
+  onMissionChange?: (prompt: string) => void;
 }
 
 export default function EpisodePlayer({
@@ -56,6 +57,7 @@ export default function EpisodePlayer({
   onMissionComplete,
   onEpisodeComplete,
   onTutorEvent,
+  onMissionChange,
 }: EpisodePlayerProps) {
   const [phase, setPhase] = useState<EpisodePhase>("warmup");
   const [missionIndex, setMissionIndex] = useState(0);
@@ -237,6 +239,7 @@ export default function EpisodePlayer({
   useEffect(() => {
     if (currentMission) {
       resetInteraction(currentMission);
+      onMissionChange?.(currentMission.prompt);
     }
   }, [currentMission, resetInteraction]);
 
