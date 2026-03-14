@@ -11,14 +11,14 @@ interface CelebrationProps {
 const CONFETTI_COLORS = ["#6366f1", "#ef4444", "#3b82f6", "#f59e0b", "#10b981", "#ec4899", "#8b5cf6", "#06b6d4", "#f97316"];
 
 const CELEBRATION_PHRASES = [
-  "Whoa, you found it! 🎉",
-  "Wait — they're TWINS! 🌟",
-  "Yesss! That's a match! 🤩",
-  "How did you know?! ✋",
-  "No way! You got it! 🎆",
-  "Dude. You're so good at this! 🎊",
-  "I KNEW you'd find it! ⭐",
-  "Okay that was impressive! 💫",
+  "YOU FOUND IT! 🎉",
+  "TWINS! 🌟",
+  "MATCH! 🤩",
+  "WHOA! ✋",
+  "NO WAY! 🎆",
+  "BOOM! 🎊",
+  "NAILED IT! ⭐",
+  "YES YES YES! 💫",
 ];
 
 function ConfettiPiece({ delay, color }: { delay: number; color: string }) {

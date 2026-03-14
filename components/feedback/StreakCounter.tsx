@@ -7,7 +7,7 @@ interface StreakCounterProps {
 }
 
 export default function StreakCounter({ streak }: StreakCounterProps) {
-  if (streak < 2) return null;
+  if (streak < 1) return null;
 
   const isMilestone = streak === 3 || streak === 5 || streak >= 7;
 

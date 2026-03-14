@@ -44,10 +44,10 @@ export default function SessionGoalCard({
         </motion.div>
 
         <h2 className="text-xl font-bold text-gray-800 mb-1">
-          Amazing Day!
+          You&apos;re On Fire!
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          You earned <span className="font-bold text-indigo-600">{dailyXP} XP</span> today!
+          You earned <span className="font-bold text-indigo-600">{dailyXP} XP</span> today! Keep the streak alive?
         </p>
 
         {/* Level badge */}
@@ -73,21 +73,21 @@ export default function SessionGoalCard({
           &ldquo;You&apos;re a fraction superstar! Come back tomorrow for more!&rdquo;
         </p>
 
-        {/* Buttons */}
+        {/* Buttons — Keep Going is primary to maintain momentum */}
         <div className="flex gap-3">
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={onDoneForToday}
-            className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 text-white font-semibold text-sm shadow-md"
+            onClick={onKeepGoing}
+            className="flex-[2] px-4 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-sm shadow-md"
           >
-            Done for Today ✅
+            Keep Going! 🚀
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={onKeepGoing}
-            className="flex-1 px-4 py-3 rounded-xl bg-gray-100 text-gray-600 font-semibold text-sm"
+            onClick={onDoneForToday}
+            className="flex-1 px-4 py-3 rounded-xl bg-gray-100 text-gray-500 font-medium text-xs"
           >
-            Keep Going →
+            Done for today
           </motion.button>
         </div>
       </motion.div>

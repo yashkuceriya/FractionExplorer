@@ -63,7 +63,7 @@ type Phase = "entering" | "active" | "success" | "fail" | "exiting";
 
 export default function SwiperChallenge({
   show,
-  timeLimit = 6,
+  timeLimit = 12,
   onSuccess,
   onFail,
   onComplete,
@@ -304,7 +304,7 @@ export default function SwiperChallenge({
               transition={{ delay: 0.4 }}
               className="relative z-10 text-base sm:text-lg font-bold text-white/80 text-center mb-4 px-4"
             >
-              Too slow! He&apos;ll be back... you&apos;ll get him next time!
+              Ooh, he was too fast! But don&apos;t worry — you&apos;ll get him next time!
             </motion.p>
           )}
 

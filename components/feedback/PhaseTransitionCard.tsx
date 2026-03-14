@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { motion } from "framer-motion";
 
 const PHASE_INFO: Record<string, { emoji: string; title: string; summary: string; location: string }> = {
@@ -49,10 +48,7 @@ export default function PhaseTransitionCard({
 }: PhaseTransitionCardProps) {
   const info = PHASE_INFO[phase];
 
-  useEffect(() => {
-    const timer = setTimeout(onDismiss, 4000);
-    return () => clearTimeout(timer);
-  }, [onDismiss]);
+  // No auto-dismiss — kids own the pacing by tapping "Let's GO!"
 
   if (!info) return null;
 

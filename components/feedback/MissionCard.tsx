@@ -18,6 +18,7 @@ export default function MissionCard({
   solved,
 }: MissionCardProps) {
   const [wrongTap, setWrongTap] = useState<number | null>(null);
+  const [wrongCount, setWrongCount] = useState(0);
 
   if (!challenge) return null;
 
@@ -58,6 +59,7 @@ export default function MissionCard({
       onSolve?.(challenge);
     } else {
       setWrongTap(index);
+      setWrongCount((c) => c + 1);
       setTimeout(() => setWrongTap(null), 600);
     }
   }
@@ -68,9 +70,16 @@ export default function MissionCard({
       onSolve?.(challenge);
     } else {
       setWrongTap(index);
+      setWrongCount((c) => c + 1);
       setTimeout(() => setWrongTap(null), 600);
     }
   }
+
+  const HINTS = [
+    "Hmm, try again! Look carefully at the pieces!",
+    "Almost! Count the colored parts — which has more?",
+    "You're SO close! Try the other one!",
+  ];
 
   return (
     <AnimatePresence mode="wait">
@@ -135,7 +144,7 @@ export default function MissionCard({
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={onSkip}
-              className="text-xs text-gray-400 hover:text-gray-600 font-medium px-3 py-2 min-h-[36px] rounded-lg hover:bg-white/60 shrink-0"
+              className="text-xs text-gray-400 hover:text-gray-600 font-medium px-3 py-2 min-h-[48px] rounded-lg hover:bg-white/60 shrink-0"
             >
               Skip
             </motion.button>
@@ -191,6 +200,16 @@ export default function MissionCard({
               </motion.button>
             ))}
           </div>
+        )}
+        {/* Hint after 2+ wrong attempts */}
+        {wrongCount >= 2 && !solved && (
+          <motion.p
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-xs font-bold text-purple-500 ml-9 mt-0.5"
+          >
+            💡 {HINTS[Math.min(wrongCount - 2, HINTS.length - 1)]}
+          </motion.p>
         )}
       </motion.div>
     </AnimatePresence>
