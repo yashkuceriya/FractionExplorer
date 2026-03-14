@@ -111,7 +111,7 @@ export default function MissionCard({
                 solved ? "text-emerald-700" : "text-gray-800"
               }`}
             >
-              {solved ? "Nice job!" : challenge.prompt}
+              {solved ? ["You got it!", "Nailed it!", "Boom!", "Look at you!"][Math.floor(Math.random() * 4)] : challenge.prompt}
             </p>
             {challenge.type === "share-puzzle" && !solved && (
               <p className="text-[10px] text-gray-400 mt-0.5">
@@ -135,7 +135,7 @@ export default function MissionCard({
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={onSkip}
-              className="text-[10px] text-gray-400 hover:text-gray-600 font-medium px-2 py-1 rounded-lg hover:bg-white/60 shrink-0"
+              className="text-xs text-gray-400 hover:text-gray-600 font-medium px-3 py-2 min-h-[36px] rounded-lg hover:bg-white/60 shrink-0"
             >
               Skip
             </motion.button>

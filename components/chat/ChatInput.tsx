@@ -27,7 +27,7 @@ export default function ChatInput({ onSend, disabled, quickReplies }: ChatInputP
               key={reply}
               onClick={() => !disabled && onSend(reply)}
               disabled={disabled}
-              className="px-4 py-2.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200/60 active:bg-amber-100 disabled:opacity-50 transition-colors min-h-[44px]"
+              className="px-4 py-2.5 bg-amber-50 text-amber-700 text-sm font-bold rounded-full border border-amber-200/60 active:bg-amber-100 disabled:opacity-50 transition-colors min-h-[44px] min-w-[44px]"
             >
               {reply}
             </button>
@@ -40,7 +40,7 @@ export default function ChatInput({ onSend, disabled, quickReplies }: ChatInputP
           value={input}
           onChange={(e) => setInput(e.target.value.slice(0, 200))}
           maxLength={200}
-          placeholder="Type here..."
+          placeholder="Tell me what you think!"
           disabled={disabled}
           aria-label="Chat message"
           className="chat-input flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-300 disabled:opacity-50"

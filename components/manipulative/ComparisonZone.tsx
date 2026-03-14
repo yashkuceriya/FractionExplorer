@@ -34,7 +34,7 @@ export default function ComparisonZone({
           onTapPlace();
         }
       }}
-      className={`relative flex-1 rounded-2xl border-2 border-dashed p-3 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[130px] transition-colors ${
+      className={`relative flex-1 rounded-2xl border-2 border-dashed p-3 flex flex-col items-center justify-center min-h-[90px] sm:min-h-[110px] transition-colors ${
         isOver
           ? "bg-amber-100/80 border-amber-400 shadow-inner shadow-amber-200/40"
           : fraction
@@ -67,8 +67,8 @@ export default function ComparisonZone({
           <div className="w-10 h-10 rounded-full bg-amber-100/60 flex items-center justify-center text-xl">
             {side === "left" ? "👈" : "👉"}
           </div>
-          <p className="text-[11px] font-bold text-amber-400">
-            {onTapPlace ? "Tap to place" : "Drag here"}
+          <p className="text-xs font-bold text-amber-400">
+            {onTapPlace ? "Tap here!" : "Drop a block here!"}
           </p>
         </div>
       )}

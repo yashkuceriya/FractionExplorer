@@ -11,13 +11,14 @@ interface CelebrationProps {
 const CONFETTI_COLORS = ["#6366f1", "#ef4444", "#3b82f6", "#f59e0b", "#10b981", "#ec4899", "#8b5cf6", "#06b6d4", "#f97316"];
 
 const CELEBRATION_PHRASES = [
-  "WE DID IT! WE DID IT! 🎉",
-  "YOU FOUND IT! AMAZING! 🌟",
-  "INCREDIBLE! HIGH FIVE! 🤩",
-  "HIGH FIVE! YOU'RE A STAR! ✋",
-  "AWESOME! WHAT A MATCH! 🎆",
-  "WOW WOW WOW! 🎊",
-  "YOU GOT IT! ⭐",
+  "Whoa, you found it! 🎉",
+  "Wait — they're TWINS! 🌟",
+  "Yesss! That's a match! 🤩",
+  "How did you know?! ✋",
+  "No way! You got it! 🎆",
+  "Dude. You're so good at this! 🎊",
+  "I KNEW you'd find it! ⭐",
+  "Okay that was impressive! 💫",
 ];
 
 function ConfettiPiece({ delay, color }: { delay: number; color: string }) {
@@ -30,7 +31,7 @@ function ConfettiPiece({ delay, color }: { delay: number; color: string }) {
     <motion.div
       initial={{ y: -20, x: 0, opacity: 1, rotate: 0, scale: 0 }}
       animate={{
-        y: "100vh",
+        y: "100dvh",
         x: (Math.random() - 0.5) * 250,
         opacity: [1, 1, 0],
         rotate: Math.random() * 1080,
@@ -121,7 +122,7 @@ export default function Celebration({ show, onComplete }: CelebrationProps) {
                 transition={{ delay: 0.5 }}
                 className="text-sm font-bold text-white/80 mt-2"
               >
-                Fraction match found!
+                Same amount, different pieces!
               </motion.p>
             </div>
           </motion.div>

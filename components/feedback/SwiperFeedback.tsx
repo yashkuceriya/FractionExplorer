@@ -7,16 +7,16 @@ interface SwiperFeedbackProps {
   onComplete: () => void;
 }
 
-// Never say "wrong" — always encouraging, Dora-style warm redirects
+// Warm, genuine — like a friend gently nudging, not a script
 const SWIPER_PHRASES = [
-  { text: "Different sizes! Let's keep looking!", emoji: "🤔" },
-  { text: "Good try! There's a better match!", emoji: "💪" },
-  { text: "Ooh so close! Try another one!", emoji: "🔍" },
-  { text: "Not quite twins! We'll find them!", emoji: "🌟" },
-  { text: "Almost! Try again!", emoji: "💪" },
-  { text: "Backpack says try a different one!", emoji: "🎒" },
-  { text: "Explorers never give up! LET'S GO!", emoji: "🗺️" },
-  { text: "SO close! You can do it!", emoji: "🌟" },
+  { text: "Hmm, those are different sizes!", emoji: "🤔" },
+  { text: "Ooh, sneaky! Those aren't twins.", emoji: "🔍" },
+  { text: "Not quite — but you're close!", emoji: "💪" },
+  { text: "Those LOOK the same but aren't!", emoji: "😮" },
+  { text: "Interesting... try a different one?", emoji: "🌟" },
+  { text: "Nope! But I like your thinking.", emoji: "🧠" },
+  { text: "Tricky! Wanna try again?", emoji: "🎯" },
+  { text: "So close! Keep going!", emoji: "✨" },
 ];
 
 export default function SwiperFeedback({ show, onComplete }: SwiperFeedbackProps) {
@@ -47,7 +47,7 @@ export default function SwiperFeedback({ show, onComplete }: SwiperFeedbackProps
               {phrase.text}
             </p>
             <p className="text-xs font-bold text-amber-500 mt-1.5">
-              You've got this, explorer!
+              You've totally got this!
             </p>
           </div>
         </motion.div>

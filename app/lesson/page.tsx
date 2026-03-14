@@ -270,8 +270,8 @@ export default function LessonPage() {
     onError: (error) => {
       setApiError(
         error.message?.includes("API key")
-          ? "No AI provider configured. Add an API key to .env.local and restart."
-          : "Could not reach the AI tutor. Check your connection and try again."
+          ? "Oops! Your buddy needs a little setup. Ask a grown-up to check the settings!"
+          : "Hmm, lost the connection! Check your wifi and try again."
       );
     },
   });
@@ -463,12 +463,12 @@ export default function LessonPage() {
     syncProgress();
 
     // XP toast
-    setXpToast(`+${amount} XP — ${label}`);
+    setXpToast(`+${amount} XP! ${label}`);
     setTimeout(() => setXpToast(null), 2000);
 
     // Level-up announcement
     if (result.leveledUp) {
-      batchSystemEvent(`[Student reached Level ${result.newLevel}! Give a warm, natural congrats.]`);
+      batchSystemEvent(`[LEVEL UP! Student just reached Level ${result.newLevel}! React like something amazing just happened — gasp, get excited, make them feel like a superstar!]`);
     }
 
     // Newly unlocked modes
@@ -580,7 +580,7 @@ export default function LessonPage() {
           const isNewDiscovery = recordDiscovery(discoveryKey);
           if (isNewDiscovery) {
             awardXP(5, "New Discovery!");
-            setDiscoveryToast(`✨ New Discovery: ${leftStr} = ${rightStr}!`);
+            setDiscoveryToast(`✨ Whoa! ${leftStr} and ${rightStr} are secretly the same!`);
             setTimeout(() => setDiscoveryToast(null), 3000);
             batchSystemEvent(`[Student discovered a NEW equivalence: ${leftStr} = ${rightStr}! Celebrate!]`);
           } else {
@@ -898,7 +898,7 @@ export default function LessonPage() {
                 onClick={() => setTeachingIntro(false)}
                 className="mt-1 sm:mt-3 mx-auto px-6 py-2.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-sm font-black rounded-full shadow-lg active:scale-95 transition-transform shrink-0"
               >
-                Skip to activity →
+                Let's play! 🎮
               </button>
             </div>
           </div>
@@ -956,7 +956,7 @@ export default function LessonPage() {
           {/* Main content — responsive split layout (side-by-side on iPad landscape, stacked otherwise) */}
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
             {/* Chat panel — side panel on large screens, compact strip on phone/iPad portrait */}
-            <div className="min-h-0 md:w-[30%] md:min-w-[260px] md:max-w-[340px] md:border-r border-amber-100/60 flex flex-col max-h-[30vh] md:max-h-none overflow-hidden">
+            <div className="min-h-0 md:w-[30%] md:min-w-[260px] md:max-w-[340px] md:border-r border-amber-100/60 flex flex-col max-h-[40vh] md:max-h-none overflow-hidden">
               <ChatPanel
                 messages={visibleMessages}
                 isLoading={isLoading}
@@ -975,23 +975,23 @@ export default function LessonPage() {
                 <div className="flex items-center gap-1.5 px-2 py-1 bg-purple-50/60 border-b border-purple-100">
                   <button
                     onClick={() => setEpisodeMode(true)}
-                    className={`px-3 py-1.5 text-[11px] font-bold rounded-full transition-all ${
+                    className={`px-3 py-2 min-h-[44px] text-xs font-bold rounded-full transition-all ${
                       episodeMode
                         ? "bg-purple-600 text-white shadow-sm"
                         : "bg-white text-purple-500 border border-purple-200"
                     }`}
                   >
-                    📖 Lesson
+                    📝 My Mission
                   </button>
                   <button
                     onClick={() => setEpisodeMode(false)}
-                    className={`px-3 py-1.5 text-[11px] font-bold rounded-full transition-all ${
+                    className={`px-3 py-2 min-h-[44px] text-xs font-bold rounded-full transition-all ${
                       !episodeMode
                         ? "bg-purple-600 text-white shadow-sm"
                         : "bg-white text-purple-500 border border-purple-200"
                     }`}
                   >
-                    🧩 Free Play
+                    🎲 Explore
                   </button>
                 </div>
               )}
