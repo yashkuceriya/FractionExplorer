@@ -94,7 +94,7 @@ export default function CompletionScreen({
           )}
         </motion.div>
 
-        {/* Badge grid */}
+        {/* Badge grid — with names visible */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -106,14 +106,16 @@ export default function CompletionScreen({
             return (
               <div
                 key={badge.id}
-                title={`${badge.name}: ${badge.description}`}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg border ${
+                className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl border ${
                   isEarned
                     ? "bg-amber-50 border-amber-200"
-                    : "bg-gray-50 border-gray-200 grayscale opacity-40"
+                    : "bg-gray-50 border-gray-200 opacity-30"
                 }`}
               >
-                {badge.emoji}
+                <span className="text-lg">{badge.emoji}</span>
+                <span className={`text-[8px] font-bold leading-tight text-center ${isEarned ? "text-amber-700" : "text-gray-400"}`}>
+                  {badge.name}
+                </span>
               </div>
             );
           })}

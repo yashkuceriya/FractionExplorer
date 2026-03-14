@@ -923,7 +923,7 @@ export default function LessonPage() {
               <JourneyStrip activeIndex={journeyIndex} />
             </div>
           </div>
-          <div className="landscape-hide landscape-ipad-hide px-3 py-0.5">
+          <div className="px-3 py-0.5">
             <XPBar
               xp={playerProgress.xp}
               level={playerProgress.level}

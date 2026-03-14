@@ -15,6 +15,9 @@ export const BADGE_DEFINITIONS: Badge[] = [
   { id: "collector", name: "Collector", emoji: "🏆", description: "Discover 5 unique pairs" },
   { id: "hot-streak", name: "Hot Streak", emoji: "🔥", description: "3 correct matches in a row" },
   { id: "explorer", name: "Explorer", emoji: "🧪", description: "Use smash 3 times and merge 3 times" },
+  { id: "ten-club", name: "Ten Club", emoji: "🔟", description: "Discover 10 unique pairs" },
+  { id: "unstoppable", name: "Unstoppable", emoji: "⚡", description: "5 correct matches in a row" },
+  { id: "merge-master", name: "Merge Master", emoji: "🧬", description: "Merge 5 fractions" },
 ];
 
 export interface StudentStats {
@@ -60,6 +63,15 @@ export function checkNewBadges(stats: StudentStats, earned: string[]): string[] 
   }
   if (!earned.includes("explorer") && stats.smashes >= 3 && stats.merges >= 3) {
     newBadges.push("explorer");
+  }
+  if (!earned.includes("ten-club") && stats.uniquePairs >= 10) {
+    newBadges.push("ten-club");
+  }
+  if (!earned.includes("unstoppable") && stats.streak >= 5) {
+    newBadges.push("unstoppable");
+  }
+  if (!earned.includes("merge-master") && stats.merges >= 5) {
+    newBadges.push("merge-master");
   }
 
   if (newBadges.length > 0) {

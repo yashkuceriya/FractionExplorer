@@ -35,7 +35,11 @@ export default function SwiperFeedback({ show, onComplete }: SwiperFeedbackProps
           }}
           className="fixed top-1/2 left-1/2 z-50 pointer-events-none"
         >
-          <div className="bg-white rounded-3xl px-8 py-5 shadow-2xl text-center border-4 border-amber-300/80 max-w-[280px]">
+          <motion.div
+            animate={{ x: [0, -6, 6, -4, 4, 0] }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="bg-white rounded-3xl px-8 py-5 shadow-2xl text-center border-4 border-amber-300/80 max-w-[280px]"
+          >
             <motion.p
               animate={{ rotate: [0, -10, 10, -5, 0] }}
               transition={{ duration: 0.5 }}
@@ -47,9 +51,9 @@ export default function SwiperFeedback({ show, onComplete }: SwiperFeedbackProps
               {phrase.text}
             </p>
             <p className="text-xs font-bold text-amber-500 mt-1.5">
-              You've totally got this!
+              You&apos;ve totally got this!
             </p>
-          </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

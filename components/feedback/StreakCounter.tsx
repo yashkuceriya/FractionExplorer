@@ -21,10 +21,20 @@ export default function StreakCounter({ streak }: StreakCounterProps) {
           opacity: 1,
         }}
         transition={{ type: "spring", stiffness: 500, damping: 15 }}
-        className="flex items-center gap-1 px-2 py-1 bg-orange-50 rounded-lg border border-orange-200"
+        className={`flex items-center gap-1 px-2 py-1 rounded-lg border ${
+          isMilestone
+            ? "bg-gradient-to-r from-orange-100 to-red-100 border-orange-300 shadow-sm shadow-orange-200/50"
+            : "bg-orange-50 border-orange-200"
+        }`}
       >
-        <span className={`${isMilestone ? "text-lg" : "text-sm"}`}>🔥</span>
-        <span className={`font-bold text-orange-600 ${isMilestone ? "text-base" : "text-sm"}`}>
+        <motion.span
+          className={`${isMilestone ? "text-lg" : "text-sm"}`}
+          animate={isMilestone ? { rotate: [0, -15, 15, 0] } : {}}
+          transition={isMilestone ? { repeat: Infinity, duration: 1, ease: "easeInOut" } : {}}
+        >
+          🔥
+        </motion.span>
+        <span className={`font-black text-orange-600 ${isMilestone ? "text-base" : "text-sm"}`}>
           {streak}
         </span>
       </motion.div>

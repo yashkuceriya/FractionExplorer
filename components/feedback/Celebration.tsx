@@ -90,17 +90,21 @@ export default function Celebration({ show, onComplete }: CelebrationProps) {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: [0, 1.2, 1], opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 15 }}
+            transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.15 }}
             className="absolute inset-0 flex items-center justify-center"
           >
             <div className="bg-gradient-to-br from-amber-400 via-yellow-300 to-orange-400 rounded-3xl px-8 py-6 shadow-2xl shadow-amber-500/30 text-center border-4 border-white/60">
-              {/* Dancing stars */}
+              {/* Dancing stars — staggered entry */}
               <div className="flex justify-center gap-2 mb-2">
                 {["⭐", "🌟", "⭐"].map((star, i) => (
                   <motion.span
                     key={i}
-                    animate={{ y: [0, -8, 0], rotate: [0, 20, -20, 0] }}
-                    transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.15 }}
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0, y: [0, -8, 0] }}
+                    transition={{
+                      scale: { delay: 0.3 + i * 0.12, type: "spring", stiffness: 400 },
+                      y: { repeat: Infinity, duration: 0.6, delay: 0.5 + i * 0.15 },
+                    }}
                     className="text-2xl"
                   >
                     {star}
@@ -109,8 +113,12 @@ export default function Celebration({ show, onComplete }: CelebrationProps) {
               </div>
 
               <motion.p
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ repeat: Infinity, duration: 0.8 }}
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: [1, 1.05, 1] }}
+                transition={{
+                  opacity: { delay: 0.4 },
+                  scale: { delay: 0.4, repeat: Infinity, duration: 0.8 },
+                }}
                 className="text-2xl sm:text-3xl font-black text-white drop-shadow-md"
               >
                 {phrase}
@@ -119,7 +127,7 @@ export default function Celebration({ show, onComplete }: CelebrationProps) {
               <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 0.7 }}
                 className="text-sm font-bold text-white/80 mt-2"
               >
                 Same amount, different pieces!

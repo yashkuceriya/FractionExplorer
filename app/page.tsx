@@ -177,10 +177,10 @@ export default function WelcomePage() {
           className="mt-5 flex items-center justify-center gap-2.5 flex-wrap"
         >
           {[
-            { emoji: "🗺️", label: "Map" },
-            { emoji: "🎒", label: "Backpack" },
-            { emoji: "⚔️", label: "Battle" },
-            { emoji: "🤖", label: "AI Buddy" },
+            { emoji: "🗺️", label: "18 Episodes" },
+            { emoji: "🏆", label: "Badges" },
+            { emoji: "🎤", label: "Voice Tutor" },
+            { emoji: "🧩", label: "Manipulatives" },
           ].map((f) => (
             <span
               key={f.label}

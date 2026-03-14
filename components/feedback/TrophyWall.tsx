@@ -24,13 +24,18 @@ export default function TrophyWall({ trophies }: TrophyWallProps) {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen(!open)}
-        className="relative text-sm px-2 py-1 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors font-semibold"
+        className="relative text-sm px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-600 hover:from-amber-100 hover:to-yellow-100 transition-colors font-semibold border border-amber-200/60 min-h-[36px] flex items-center gap-1"
       >
-        🏆
+        <span>🏆</span>
         {trophies.length > 0 && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-            {trophies.length}
-          </span>
+          <span className="text-xs font-black text-amber-600">{trophies.length}</span>
+        )}
+        {trophies.length > 0 && (
+          <motion.span
+            animate={{ scale: [1, 1.3, 1] }}
+            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+            className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full"
+          />
         )}
       </motion.button>
 
