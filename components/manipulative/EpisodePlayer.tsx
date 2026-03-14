@@ -166,12 +166,13 @@ export default function EpisodePlayer({
       case "compare":
       case "find-equivalent":
       case "benchmark-sort": {
-        if (selectedChoice !== null && currentMission.answer) {
+        const answer = currentMission.answer ?? currentMission.fraction;
+        if (selectedChoice !== null) {
           const choice = currentMission.choices?.[selectedChoice];
           if (choice) {
             correct =
-              choice.n * currentMission.answer.d ===
-              currentMission.answer.n * choice.d;
+              choice.n * answer.d ===
+              answer.n * choice.d;
           }
         }
         break;
@@ -182,20 +183,22 @@ export default function EpisodePlayer({
         break;
       }
       case "complement": {
-        if (placedFraction && currentMission.answer) {
+        const compAnswer = currentMission.answer ?? currentMission.fraction;
+        if (placedFraction) {
           correct =
-            placedFraction.n * currentMission.answer.d ===
-            currentMission.answer.n * placedFraction.d;
+            placedFraction.n * compAnswer.d ===
+            compAnswer.n * placedFraction.d;
         }
         break;
       }
       case "add-fractions": {
-        if (selectedChoice !== null && currentMission.answer) {
+        const addAnswer = currentMission.answer ?? currentMission.fraction;
+        if (selectedChoice !== null) {
           const choice = currentMission.choices?.[selectedChoice];
           if (choice) {
             correct =
-              choice.n * currentMission.answer.d ===
-              currentMission.answer.n * choice.d;
+              choice.n * addAnswer.d ===
+              addAnswer.n * choice.d;
           }
         }
         break;
