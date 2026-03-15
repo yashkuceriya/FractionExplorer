@@ -19,7 +19,7 @@ export interface PlayerProgress {
 
 // Level thresholds: index = level, value = XP needed
 // Kept low so kids unlock new modes quickly and don't feel stuck
-const LEVEL_THRESHOLDS = [0, 5, 15, 30, 50, 80];
+const LEVEL_THRESHOLDS = [0, 3, 8, 15, 25, 40];
 
 export const LEVEL_NAMES = [
   "Beginner",
@@ -35,11 +35,11 @@ export const LEVEL_EMOJIS = ["🌱", "🌿", "🧭", "🏗️", "⭐", "👑"];
 // Modes unlock at these levels
 export const MODE_UNLOCK_LEVELS: Record<string, number> = {
   compare: 0,
-  battle: 1,
-  tower: 2,
-  recipe: 3,
-  pizza: 4,
-  rain: 2,
+  battle: 0,
+  tower: 1,
+  recipe: 2,
+  pizza: 2,
+  rain: 1,
 };
 
 function todayISO(): string {

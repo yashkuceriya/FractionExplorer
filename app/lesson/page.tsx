@@ -876,14 +876,8 @@ export default function LessonPage() {
       {/* Teaching intro — full-screen chat for early episodes before showing workspace */}
       {teachingIntro ? (
         <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-          <div className="flex-1 flex flex-col items-center p-2 sm:p-4 min-h-0">
+          <div className="flex-1 flex flex-col items-center px-2 pt-1 pb-2 min-h-0">
             <div className="w-full max-w-lg flex flex-col flex-1 min-h-0 overflow-hidden">
-              <div className="text-center py-1 sm:py-2 shrink-0 landscape-compact">
-                <span className="text-2xl sm:text-4xl">{selectedEpisode?.emoji || "🍕"}</span>
-                <h2 className="text-sm sm:text-lg font-black text-purple-700">
-                  {selectedEpisode?.title || "Let's Learn!"}
-                </h2>
-              </div>
               <div className="flex-1 min-h-0 overflow-hidden">
                 <ChatPanel
                   messages={visibleMessages}
@@ -902,7 +896,7 @@ export default function LessonPage() {
               </div>
               <button
                 onClick={() => setTeachingIntro(false)}
-                className="mt-1 sm:mt-3 mx-auto px-6 py-2.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-sm font-black rounded-full shadow-lg active:scale-95 transition-transform shrink-0"
+                className="mt-2 mx-auto px-8 py-3 min-h-[48px] bg-gradient-to-r from-green-400 to-emerald-500 text-white text-base font-black rounded-full shadow-lg active:scale-95 transition-transform shrink-0 animate-bounce"
               >
                 Let's play! 🎮
               </button>
