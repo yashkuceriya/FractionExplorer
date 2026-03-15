@@ -32,7 +32,7 @@ export default function Backpack({ onSelectTool, disabled }: BackpackProps) {
       <button
         onClick={() => !disabled && setOpen(true)}
         disabled={disabled}
-        className="px-2.5 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[10px] font-black rounded-full shadow-sm active:scale-95 transition-transform disabled:opacity-50"
+        className="px-3 py-2 min-h-[44px] bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-black rounded-full shadow-sm active:scale-95 transition-transform disabled:opacity-50"
       >
         🎒 Backpack!
       </button>

@@ -754,7 +754,7 @@ export default function PizzaChallenge({ onComplete, pendingDrop, onXP }: PizzaC
           <button
             key={i}
             onClick={() => selectOrder(i)}
-            className={`w-7 h-7 rounded-full text-xs flex items-center justify-center transition-all border-2 ${
+            className={`w-10 h-10 rounded-full text-xs flex items-center justify-center transition-all border-2 ${
               i === currentIndex
                 ? "bg-amber-500 border-amber-600 shadow-md scale-110"
                 : completedOrders.has(i)
@@ -929,7 +929,7 @@ export default function PizzaChallenge({ onComplete, pendingDrop, onXP }: PizzaC
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={handleUndoCut}
-                      className="text-[10px] px-2.5 py-1 rounded-lg bg-amber-100 text-amber-700 font-semibold hover:bg-amber-200 transition-colors"
+                      className="text-xs px-3 py-2 min-h-[44px] rounded-lg bg-amber-100 text-amber-700 font-semibold hover:bg-amber-200 transition-colors"
                     >
                       ↩ Undo
                     </motion.button>

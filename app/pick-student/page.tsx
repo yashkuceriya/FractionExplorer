@@ -27,7 +27,7 @@ export default function PickStudentPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState("");
   const [newAvatar, setNewAvatar] = useState("🦊");
-  const [newPin, setNewPin] = useState("0000");
+  const [newPin, setNewPin] = useState("");
   const [newDifficulty, setNewDifficulty] = useState<Difficulty>("beginner");
   const [adding, setAdding] = useState(false);
   const [formError, setFormError] = useState("");
@@ -129,7 +129,7 @@ export default function PickStudentPage() {
       }
 
       setNewName("");
-      setNewPin("0000");
+      setNewPin("");
       setShowAddForm(false);
       setAdding(false);
       await loadStudents();

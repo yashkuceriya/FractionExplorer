@@ -70,7 +70,7 @@ export default function ComparisonZone({
               e.stopPropagation();
               onClear();
             }}
-            className="text-[10px] text-gray-400 active:text-red-400 px-2 py-1 min-h-[36px] rounded-lg active:bg-red-50 font-medium"
+            className="text-xs text-gray-400 active:text-red-400 px-3 py-2 min-h-[44px] min-w-[44px] rounded-lg active:bg-red-50 font-medium"
           >
             ✕
           </button>

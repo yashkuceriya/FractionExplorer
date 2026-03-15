@@ -33,7 +33,7 @@ export default function UsageStats() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-1 rounded"
+        className="text-xs text-gray-400 hover:text-gray-600 transition-colors px-2 py-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded"
         title="API Usage"
       >
         {open ? "×" : "📊"}
