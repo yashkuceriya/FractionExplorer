@@ -835,12 +835,6 @@ export default function LessonPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between px-2.5 py-1 sm:py-1.5 bg-gradient-to-r from-pink-100/80 via-purple-50 to-green-50/80 border-b border-pink-200/60">
         <div className="flex items-center gap-1.5">
-          <a
-            href="/"
-            className="text-sm text-pink-500 active:text-pink-700 px-1"
-          >
-            ←
-          </a>
           <button
             onClick={() => setSelectedEpisode(null)}
             className="px-2.5 py-1.5 bg-white/80 border border-purple-200 text-purple-700 text-[10px] font-bold rounded-full active:scale-95 transition-transform"
