@@ -20,8 +20,8 @@ export const VOICE_CHARACTERS: VoiceCharacter[] = [
     name: "Maya",
     emoji: "👧🏽",
     description: "Your learning buddy!",
-    pitch: 1.3,
-    rate: 1.1,
+    pitch: 1.25,
+    rate: 1.0,
     voiceHints: ["Samantha", "Tessa", "Google"],
     color: "#F13EA1",
     elevenLabsVoiceId: "cgSgspJ2msm6clMCkdW9", // Jessica — playful, bright, warm young female
@@ -31,8 +31,8 @@ export const VOICE_CHARACTERS: VoiceCharacter[] = [
     name: "Kai",
     emoji: "👦🏽",
     description: "Science explorer!",
-    pitch: 1.15,
-    rate: 1.0,
+    pitch: 1.1,
+    rate: 0.95,
     voiceHints: ["Daniel", "Alex", "Google UK English Male"],
     color: "#0F73B8",
     elevenLabsVoiceId: "TX3LPaxmHKxFdv7VOQHJ", // Liam — energetic, young male

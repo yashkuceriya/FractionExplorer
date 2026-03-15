@@ -72,6 +72,10 @@ export function cleanForSpeech(text: string): string {
     .replace(/\[ADVANCE_PHASE\]/g, "")
     .replace(/\[SWITCH_MODE:\w+\]/g, "")
     .replace(/\b(\d+)\/(\d+)\b/g, (match) => fractionsToWords(match))
+    // Preserve natural pauses: ellipses → comma pause, dashes → comma pause
+    .replace(/\.{2,}/g, ", ")
+    .replace(/\s*—\s*/g, ", ")
+    .replace(/\s*--\s*/g, ", ")
     .replace(/\s+/g, " ")
     .trim();
 }
