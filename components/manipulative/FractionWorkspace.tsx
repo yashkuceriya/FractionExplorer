@@ -738,117 +738,14 @@ export default function FractionWorkspace({
           )}
         </AnimatePresence>
 
-        {/* Fraction pieces area with Jungle Floor */}
-        <div className="flex-1 overflow-y-auto jungle-floor px-3 py-4 relative">
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 justify-items-center py-2">
-            {blocks.map((block) => {
-              const isGuidedHighlight = isFractionHighlighted(
-                block.numerator,
-                block.denominator
-              );
-              const isMTarget = mergeTargetId === block.id;
-              const isSelected = selectedBlockId === block.id;
-
-              return (
-                <div
-                  key={block.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedBlockId(isSelected ? null : block.id);
-                  }}
-                  className="relative transition-transform duration-200"
-                  style={{ zIndex: isSelected ? 40 : 10 }}
-                >
-                  <FractionPiece
-                    id={block.id}
-                    numerator={block.numerator}
-                    denominator={block.denominator}
-                    color={block.color}
-                    onSmash={
-                      isSelected && block.numerator > 1
-                        ? () => { handleSmash(block.id); setSelectedBlockId(null); }
-                        : undefined
-                    }
-                    onMerge={
-                      isSelected && hasCompatibleNeighbor(block)
-                        ? () => { handleMerge(block.id); setSelectedBlockId(null); }
-                        : undefined
-                    }
-                    highlighted={isGuidedHighlight}
-                    isMergeTarget={isMTarget}
-                    mergePreview={isMTarget ? mergePreview : null}
-                    isEquivalentShimmer={equivalentBlockIds.has(block.id)}
-                  />
-                  {isSelected && (
-                    <motion.div 
-                      layoutId="block-select-ring"
-                      className="absolute -inset-3 border-4 border-pink-400 rounded-[2rem] pointer-events-none z-0"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Floating Action Menu — Backpack & Build */}
-          <div className="sticky bottom-4 left-0 right-0 flex items-center justify-center gap-3 z-50 pointer-events-none pb-2">
-            <div className="pointer-events-auto flex items-center gap-3 px-4 py-3 bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border-2 border-amber-100/50">
-              <Backpack
-                onSelectTool={(tool) => {
-                  if (tool === "random") {
-                    const existing = blocks.map((b) => ({ numerator: b.numerator, denominator: b.denominator, color: b.color }));
-                    const newFrac = getRandomFraction(existing, initialFractions);
-                    playPickup();
-                    setBlocks((prev) => [...prev, { id: nextBlockId(), ...newFrac, fresh: true }]);
-                  } else if (tool === "split" && selectedBlockId) {
-                    handleSmash(selectedBlockId);
-                    setSelectedBlockId(null);
-                  } else if (tool === "merge" && selectedBlockId) {
-                    handleMerge(selectedBlockId);
-                    setSelectedBlockId(null);
-                  }
-                }}
-              />
-              <div className="w-px h-8 bg-amber-100" />
-              <FractionBuilder
-                onBuild={(frac) => {
-                  playPickup();
-                  setBlocks((prev) => [
-                    ...prev,
-                    { id: nextBlockId(), ...frac, fresh: true },
-                  ]);
-                }}
-              />
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const existing = blocks.map((b) => ({ numerator: b.numerator, denominator: b.denominator, color: b.color }));
-                  const newFrac = getRandomFraction(existing, initialFractions);
-                  playPickup();
-                  setBlocks((prev) => [...prev, { id: nextBlockId(), ...newFrac, fresh: true }]);
-                }}
-                className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-2xl shadow-md btn-squishy flex items-center justify-center text-xl"
-                aria-label="Add a random fraction block"
-                title="Get Random Block"
-              >
-                🎲
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Challenge Zone — the adventure area */}
-        <div className="bg-white border-t-4 border-amber-100/40 relative z-20">
-          {/* Challenge mode "Navigator" tabs */}
-          <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide bg-amber-50/30">
+        {/* Challenge Zone — comparison & modes at the top */}
+        <div className="bg-white border-b-2 border-amber-100/40 relative z-20">
+          {/* Challenge mode tabs — compact */}
+          <div className="flex gap-1.5 px-3 py-2 overflow-x-auto scrollbar-hide">
             {CHALLENGE_TABS.map((tab) => {
               const isUnlocked = unlockedModes.includes(tab.mode);
-              const unlockLevel = MODE_UNLOCK_LEVELS[tab.mode] ?? 0;
               const isActive = challengeMode === tab.mode;
-              
+
               return (
               <button
                 key={tab.mode}
@@ -860,32 +757,26 @@ export default function FractionWorkspace({
                     onGameEvent?.(`[Student switched to ${tab.label} (${tab.emoji}) mode. Give a casual tip for this mode.]`);
                   }
                 }}
-                className={`flex-shrink-0 px-4 py-2.5 rounded-2xl font-black text-xs transition-all btn-squishy flex items-center gap-2 ${
+                className={`flex-shrink-0 px-3 py-1.5 rounded-xl font-black text-[11px] transition-all btn-squishy flex items-center gap-1.5 ${
                   !isUnlocked
-                    ? "bg-gray-100 text-gray-300 border border-gray-200 cursor-default opacity-50"
+                    ? "bg-gray-100 text-gray-300 cursor-default opacity-40"
                     : isActive
-                    ? "bg-gradient-to-br from-orange-400 to-amber-500 text-white shadow-lg"
-                    : "bg-white text-amber-700 border-2 border-amber-100 active:bg-amber-50"
+                    ? "bg-gradient-to-br from-orange-400 to-amber-500 text-white shadow-sm"
+                    : "bg-amber-50 text-amber-700 active:bg-amber-100"
                 }`}
               >
-                <span className="text-lg">{isUnlocked ? tab.emoji : "🔒"}</span>
+                <span className="text-sm">{isUnlocked ? tab.emoji : "🔒"}</span>
                 <span>{tab.label}</span>
-                {isActive && (
-                  <motion.div 
-                    layoutId="active-tab-dot"
-                    className="w-1.5 h-1.5 bg-white rounded-full"
-                  />
-                )}
               </button>
               );
             })}
           </div>
 
-          <div className="p-4 pt-2 min-h-[160px] relative">
+          <div className="px-3 pb-3 min-h-[120px] relative">
             {/* Compare mode (original) */}
             {challengeMode === "compare" && (
-              <div className="flex flex-col gap-4">
-                <div className="flex gap-3 items-center justify-center">
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2 items-center justify-center">
                   <ComparisonZone
                     side="left"
                     fraction={comparisonLeft}
@@ -941,16 +832,16 @@ export default function FractionWorkspace({
                       initial={{ opacity: 0, scale: 0.8, y: 10 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.8 }}
-                      className={`p-4 rounded-3xl text-center shadow-xl border-2 flex items-center justify-center gap-3 ${
+                      className={`px-3 py-2 rounded-2xl text-center shadow-sm border flex items-center justify-center gap-2 ${
                         areFractionsEqual(comparisonLeft, comparisonRight)
                           ? "bg-emerald-50 border-emerald-200 text-emerald-800"
                           : "bg-amber-50 border-amber-200 text-amber-800"
                       }`}
                     >
-                      <span className="text-2xl">
-                        {areFractionsEqual(comparisonLeft, comparisonRight) ? "🌟" : "🧗"}
+                      <span className="text-base">
+                        {areFractionsEqual(comparisonLeft, comparisonRight) ? "🌟" : "🤔"}
                       </span>
-                      <p className="text-sm font-black">
+                      <p className="text-xs font-bold">
                         {areFractionsEqual(comparisonLeft, comparisonRight) 
                           ? "Perfect Match! You found a twin!" 
                           : "Almost! They are different sizes. Try another!"}
@@ -976,6 +867,104 @@ export default function FractionWorkspace({
             {/* Rain mode */}
             {challengeMode === "rain" && <FractionRain onXP={onXP} />}
           </div>
+        </div>
+
+        {/* Fraction blocks area */}
+        <div className="flex-1 overflow-y-auto px-3 py-3 relative bg-gradient-to-b from-amber-50/30 to-white">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 justify-items-center">
+            {blocks.map((block) => {
+              const isGuidedHighlight = isFractionHighlighted(
+                block.numerator,
+                block.denominator
+              );
+              const isMTarget = mergeTargetId === block.id;
+              const isSelected = selectedBlockId === block.id;
+
+              return (
+                <div
+                  key={block.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedBlockId(isSelected ? null : block.id);
+                  }}
+                  className="relative transition-transform duration-200"
+                  style={{ zIndex: isSelected ? 40 : 10 }}
+                >
+                  <FractionPiece
+                    id={block.id}
+                    numerator={block.numerator}
+                    denominator={block.denominator}
+                    color={block.color}
+                    onSmash={
+                      isSelected && block.numerator > 1
+                        ? () => { handleSmash(block.id); setSelectedBlockId(null); }
+                        : undefined
+                    }
+                    onMerge={
+                      isSelected && hasCompatibleNeighbor(block)
+                        ? () => { handleMerge(block.id); setSelectedBlockId(null); }
+                        : undefined
+                    }
+                    highlighted={isGuidedHighlight}
+                    isMergeTarget={isMTarget}
+                    mergePreview={isMTarget ? mergePreview : null}
+                    isEquivalentShimmer={equivalentBlockIds.has(block.id)}
+                  />
+                  {isSelected && (
+                    <motion.div
+                      layoutId="block-select-ring"
+                      className="absolute -inset-2 border-3 border-pink-400 rounded-2xl pointer-events-none z-0"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Toolbar — compact bottom bar */}
+        <div className="flex items-center justify-center gap-2 px-3 py-2 bg-white border-t border-amber-100/40">
+          <Backpack
+            onSelectTool={(tool) => {
+              if (tool === "random") {
+                const existing = blocks.map((b) => ({ numerator: b.numerator, denominator: b.denominator, color: b.color }));
+                const newFrac = getRandomFraction(existing, initialFractions);
+                playPickup();
+                setBlocks((prev) => [...prev, { id: nextBlockId(), ...newFrac, fresh: true }]);
+              } else if (tool === "split" && selectedBlockId) {
+                handleSmash(selectedBlockId);
+                setSelectedBlockId(null);
+              } else if (tool === "merge" && selectedBlockId) {
+                handleMerge(selectedBlockId);
+                setSelectedBlockId(null);
+              }
+            }}
+          />
+          <FractionBuilder
+            onBuild={(frac) => {
+              playPickup();
+              setBlocks((prev) => [
+                ...prev,
+                { id: nextBlockId(), ...frac, fresh: true },
+              ]);
+            }}
+          />
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const existing = blocks.map((b) => ({ numerator: b.numerator, denominator: b.denominator, color: b.color }));
+              const newFrac = getRandomFraction(existing, initialFractions);
+              playPickup();
+              setBlocks((prev) => [...prev, { id: nextBlockId(), ...newFrac, fresh: true }]);
+            }}
+            className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-xl shadow-sm btn-squishy flex items-center justify-center text-lg"
+            aria-label="Add a random fraction block"
+          >
+            🎲
+          </button>
         </div>
       </div>
 
