@@ -596,25 +596,20 @@ export default function FractionWorkspace({
         data-no-select
       >
 
-        {/* Header — immersive adventure style */}
-        <div className="px-4 py-2.5 bg-gradient-to-b from-amber-50 to-white border-b-2 border-amber-100/40 relative z-10">
+        {/* Header */}
+        <div className="px-4 py-2 bg-gradient-to-b from-amber-50 to-white border-b-2 border-amber-100/40 relative z-10">
           <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <h2 className="text-xs font-black text-amber-800 uppercase tracking-widest flex items-center gap-1.5 opacity-60">
-                <span>🌴</span> Fraction Lab
-              </h2>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-black text-amber-950">Workspace</span>
-                {selectedBlockId && (
-                  <motion.span 
-                    initial={{ scale: 0 }} 
-                    animate={{ scale: 1 }}
-                    className="px-2 py-0.5 bg-pink-100 text-pink-600 text-[10px] font-black rounded-full uppercase"
-                  >
-                    Block Selected!
-                  </motion.span>
-                )}
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-black text-amber-900">Fraction Lab</span>
+              {selectedBlockId && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="px-2 py-0.5 bg-pink-100 text-pink-600 text-[10px] font-black rounded-full"
+                >
+                  Selected
+                </motion.span>
+              )}
             </div>
             
             <div className="flex items-center gap-2">

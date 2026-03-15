@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import type { VoiceCharacter } from "@/lib/voice-characters";
 import { playCharacterIntro } from "@/lib/sounds";
 
@@ -429,23 +429,7 @@ export default function VoiceNarrator({
         </span>
       </motion.button>
 
-      {/* Subtitle — persistent bottom bar, full text with wrapping */}
-      <AnimatePresence>
-        {subtitleVisible && subtitleText && enabled && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 5 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-2 left-1/2 -translate-x-1/2 z-40 max-w-[90vw] sm:max-w-md"
-            onClick={() => setSubtitleVisible(false)}
-          >
-            <div className="bg-black/70 backdrop-blur-sm text-white text-sm font-medium px-4 py-2 rounded-2xl shadow-lg text-center leading-snug">
-              {subtitleText}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Subtitle removed — tutor text is already visible in chat panel */}
     </>
   );
 }
