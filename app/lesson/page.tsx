@@ -923,7 +923,7 @@ export default function LessonPage() {
               <JourneyStrip activeIndex={journeyIndex} />
             </div>
           </div>
-          <div className="px-3 py-0.5">
+          <div className="px-3 py-0.5 landscape-ipad-hide">
             <XPBar
               xp={playerProgress.xp}
               level={playerProgress.level}
@@ -970,7 +970,7 @@ export default function LessonPage() {
           {/* Main content — responsive split layout (side-by-side on iPad landscape, stacked otherwise) */}
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
             {/* Chat panel — side panel on large screens, compact strip on phone/iPad portrait */}
-            <div className="min-h-0 md:w-[30%] md:min-w-[260px] md:max-w-[340px] md:border-r border-amber-100/60 flex flex-col max-h-[40vh] md:max-h-none overflow-hidden">
+            <div className="min-h-0 md:w-[28%] md:min-w-[240px] md:max-w-[300px] md:border-r border-amber-100/60 flex flex-col max-h-[35vh] md:max-h-none overflow-hidden">
               <ChatPanel
                 messages={visibleMessages}
                 isLoading={isLoading}
