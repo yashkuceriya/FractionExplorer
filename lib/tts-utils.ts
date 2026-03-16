@@ -76,6 +76,8 @@ export function cleanForSpeech(text: string): string {
     .replace(/\.{2,}/g, ", ")
     .replace(/\s*—\s*/g, ", ")
     .replace(/\s*--\s*/g, ", ")
+    // Lowercase all-caps words so TTS doesn't spell them out (IT → it, WHOLE → whole)
+    .replace(/\b[A-Z]{2,}\b/g, (w) => w.toLowerCase())
     .replace(/\s+/g, " ")
     .trim();
 }
