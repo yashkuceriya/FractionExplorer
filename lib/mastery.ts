@@ -199,10 +199,10 @@ export function recordAttempt(
   }
 
   // Track last attempts (rolling window of 10)
-  sm.lastAttempts.push(correct);
-  if (sm.lastAttempts.length > MAX_LAST_ATTEMPTS) {
+  if (sm.lastAttempts.length >= MAX_LAST_ATTEMPTS) {
     sm.lastAttempts.shift();
   }
+  sm.lastAttempts.push(correct);
 
   // Handle misconceptions
   if (misconception && !sm.misconceptions.includes(misconception)) {
@@ -373,13 +373,13 @@ export function getMasterySummaryForTutor(): string {
 
   const weakSkills = report.skillDetails
     .filter((s) => s.status === "practicing" && s.total >= 3)
-    .sort((a, b) => (a.correct / a.total) - (b.correct / b.total))
+    .sort((a, b) => (a.total > 0 ? a.correct / a.total : 0) - (b.total > 0 ? b.correct / b.total : 0))
     .slice(0, 3);
 
   if (weakSkills.length > 0) {
     lines.push(
       `Struggling with: ${weakSkills
-        .map((s) => `${s.skill} (${Math.round((s.correct / s.total) * 100)}%)`)
+        .map((s) => `${s.skill} (${s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0}%)`)
         .join(", ")}`
     );
   }

@@ -238,12 +238,13 @@ export default function EpisodePlayer({
   }, [currentMission, shadedSegments, placedFraction, selectedChoice, chosenDenominator, phase, hintIndex, attempts, showHint, onMissionComplete, onTutorEvent, advanceToNext]);
 
   const handleHint = useCallback(() => {
-    if (!currentMission) return;
+    if (!currentMission || currentMission.hints.length === 0) return;
     if (hintIndex < currentMission.hints.length - 1) {
       setHintIndex((h) => h + 1);
     }
     setShowHint(true);
-    onTutorEvent(`[Student asked for hint. Tell them: "${currentMission.hints[Math.min(hintIndex, currentMission.hints.length - 1)]}"]`);
+    const hint = currentMission.hints[Math.min(hintIndex, currentMission.hints.length - 1)];
+    if (hint) onTutorEvent(`[Student asked for hint. Tell them: "${hint}"]`);
   }, [currentMission, hintIndex, onTutorEvent]);
 
   // Initialize when currentMission changes
