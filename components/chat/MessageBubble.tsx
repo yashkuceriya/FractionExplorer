@@ -9,9 +9,17 @@ interface MessageBubbleProps {
   characterId?: string;
 }
 
+/** Strip stage directions / expressions like *dramatic gasp* from chat display */
+function stripExpressions(text: string): string {
+  return text
+    .replace(/\*[^*]+\*/g, "")   // remove *expressions*
+    .replace(/\s{2,}/g, " ")     // collapse double spaces
+    .trim();
+}
+
 /** Render fraction references like "1/2" as styled inline chips */
 function renderContent(text: string, isAssistant: boolean) {
-  const cleaned = text.replace(/\[(\d+\/\d+)\]/g, "$1");
+  const cleaned = stripExpressions(text).replace(/\[(\d+\/\d+)\]/g, "$1");
   const parts = cleaned.split(/(\b\d+\/\d+\b)/g);
 
   return parts.map((part, i) => {

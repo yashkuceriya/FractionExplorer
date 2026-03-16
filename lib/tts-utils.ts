@@ -68,7 +68,7 @@ export function cleanForSpeech(text: string): string {
     )
     .replace(/\[(\d+\/\d+)\]/g, "$1")
     .replace(/\*\*(.+?)\*\*/g, "$1")
-    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/\*[^*]+\*/g, "")
     .replace(/\[ADVANCE_PHASE\]/g, "")
     .replace(/\[SWITCH_MODE:\w+\]/g, "")
     .replace(/\b(\d+)\/(\d+)\b/g, (match) => fractionsToWords(match))
